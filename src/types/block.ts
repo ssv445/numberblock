@@ -2,6 +2,7 @@ export interface Block {
     id: string;
     value: number;
     color: string;
+    position?: Position;
 }
 
 export interface Position {

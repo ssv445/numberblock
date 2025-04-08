@@ -1,7 +1,11 @@
 'use client';
 
 import { Block, BLOCK_COLORS, RAINBOW_COLORS } from '../types/block';
-import { TouchEvent } from 'react';
+import { TouchEvent, useState } from 'react';
+
+interface BlockPaletteProps {
+    onBlockDrop: (block: Block, x: number, y: number) => void;
+}
 
 interface BlockItemProps {
     block: Block;
@@ -51,15 +55,18 @@ const BlockItem = ({ block, onTouchStart, onTouchMove, onTouchEnd }: BlockItemPr
     );
 };
 
-export const BlockPalette = () => {
+export const BlockPalette = ({ onBlockDrop }: BlockPaletteProps) => {
     const blocks: Block[] = Array.from({ length: 10 }, (_, i) => ({
         id: `palette-${i + 1}`,
         value: i + 1,
         color: BLOCK_COLORS[i],
     }));
 
+    const [activeBlock, setActiveBlock] = useState<Block | null>(null);
+
     const handleTouchStart = (e: TouchEvent, block: Block) => {
         e.stopPropagation();
+        setActiveBlock(block);
         const touch = e.touches[0];
         const target = e.currentTarget as HTMLElement;
         const rect = target.getBoundingClientRect();
@@ -92,12 +99,29 @@ export const BlockPalette = () => {
     const handleTouchEnd = (e: TouchEvent) => {
         e.stopPropagation();
         const ghost = document.getElementById('ghost-block');
+        const touch = e.changedTouches[0];
+
         if (ghost) {
+            // Check if we're dropping in the building area
+            const buildingArea = document.querySelector('.building-area');
+            if (buildingArea && activeBlock) {
+                const rect = buildingArea.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+
+                // If the touch ended within the building area
+                if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+                    onBlockDrop(activeBlock, x, y);
+                }
+            }
+
             ghost.style.transition = 'all 0.2s ease-out';
             ghost.style.opacity = '0';
             ghost.style.transform = 'scale(0.8)';
             setTimeout(() => ghost.remove(), 200);
         }
+
+        setActiveBlock(null);
     };
 
     return (
