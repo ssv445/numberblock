@@ -100,9 +100,8 @@ export const BlockPalette = () => {
     };
 
     return (
-        <div className="p-2 md:p-4 w-full max-w-md mx-auto">
-            <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Block Palette</h2>
-            <div className="grid grid-cols-5 gap-2 md:gap-4">
+        <div className="p-2 w-full">
+            <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
                 {blocks.map((block) => (
                     <BlockItem
                         key={block.id}
