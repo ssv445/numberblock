@@ -2,13 +2,15 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { Engine, Render, World, Bodies, Body, Events, Runner, Mouse, MouseConstraint } from 'matter-js';
+import { Engine, Render, World, Bodies, Body, Events, Runner, Mouse, MouseConstraint, Vector } from 'matter-js';
 import { Block, PlacedBlock, BlockHandlers } from '../types/block';
 import { useDrop } from 'react-dnd';
 
 const BLOCK_SIZE = 64;
+const GRID_SIZE = BLOCK_SIZE;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
+const SNAP_DISTANCE = BLOCK_SIZE / 2;
 
 interface BuildingAreaProps extends BlockHandlers {
     placedBlocks: PlacedBlock[];
@@ -18,6 +20,38 @@ type DragEvent = {
     source: {
         body: Matter.Body;
     };
+};
+
+const snapToGrid = (x: number, y: number): Vector => {
+    const snappedX = Math.round(x / GRID_SIZE) * GRID_SIZE;
+    const snappedY = Math.round(y / GRID_SIZE) * GRID_SIZE;
+    return Vector.create(snappedX, snappedY);
+};
+
+const findNearestBlock = (position: Vector, blocks: Matter.Body[]): Vector | null => {
+    for (const block of blocks) {
+        // Check right side
+        if (Math.abs(block.position.x + BLOCK_SIZE - position.x) < SNAP_DISTANCE &&
+            Math.abs(block.position.y - position.y) < SNAP_DISTANCE) {
+            return Vector.create(block.position.x + BLOCK_SIZE, block.position.y);
+        }
+        // Check left side
+        if (Math.abs(block.position.x - BLOCK_SIZE - position.x) < SNAP_DISTANCE &&
+            Math.abs(block.position.y - position.y) < SNAP_DISTANCE) {
+            return Vector.create(block.position.x - BLOCK_SIZE, block.position.y);
+        }
+        // Check top
+        if (Math.abs(block.position.x - position.x) < SNAP_DISTANCE &&
+            Math.abs(block.position.y - BLOCK_SIZE - position.y) < SNAP_DISTANCE) {
+            return Vector.create(block.position.x, block.position.y - BLOCK_SIZE);
+        }
+        // Check bottom
+        if (Math.abs(block.position.x - position.x) < SNAP_DISTANCE &&
+            Math.abs(block.position.y + BLOCK_SIZE - position.y) < SNAP_DISTANCE) {
+            return Vector.create(block.position.x, block.position.y + BLOCK_SIZE);
+        }
+    }
+    return null;
 };
 
 export const BuildingArea = ({
@@ -41,7 +75,7 @@ export const BuildingArea = ({
 
     const handleBlockDragEnd = useCallback((e: DragEvent) => {
         const body = e.source.body;
-        if (!body || !body.label) return;
+        if (!body || !body.label || !worldRef.current) return;
 
         // Check if block is outside the building area
         const isOutside =
@@ -51,20 +85,35 @@ export const BuildingArea = ({
             body.position.y > CANVAS_HEIGHT;
 
         if (isOutside) {
-            // Remove block
-            if (worldRef.current) {
-                World.remove(worldRef.current, body);
-                onBlockRemoved(body.label);
-                blockBodiesRef.current.delete(body.label);
-            }
-        } else {
-            // Update block position
-            Body.setStatic(body, true);
-            onBlockMoved(body.label, {
-                x: body.position.x - BLOCK_SIZE / 2,
-                y: body.position.y - BLOCK_SIZE / 2
-            });
+            World.remove(worldRef.current, body);
+            onBlockRemoved(body.label);
+            blockBodiesRef.current.delete(body.label);
+            return;
         }
+
+        // Get all other blocks for snapping
+        const otherBlocks = Array.from(blockBodiesRef.current.values())
+            .filter(b => b.id !== body.id);
+
+        // Try to snap to nearby blocks first
+        const nearestBlockPos = findNearestBlock(body.position, otherBlocks);
+        let finalPosition;
+
+        if (nearestBlockPos) {
+            finalPosition = nearestBlockPos;
+        } else {
+            // If no nearby blocks, snap to grid
+            finalPosition = snapToGrid(body.position.x, body.position.y);
+        }
+
+        // Update block position
+        Body.setPosition(body, finalPosition);
+        Body.setStatic(body, true);
+
+        onBlockMoved(body.label, {
+            x: finalPosition.x - BLOCK_SIZE / 2,
+            y: finalPosition.y - BLOCK_SIZE / 2
+        });
     }, [onBlockRemoved, onBlockMoved]);
 
     // Initialize physics engine
@@ -181,10 +230,13 @@ export const BuildingArea = ({
             const x = offset.x - canvasRect.left;
             const y = offset.y - canvasRect.top;
 
+            // Snap the initial position to grid
+            const snappedPos = snapToGrid(x, y);
+
             // Create new block body
             const body = Bodies.rectangle(
-                x,
-                y,
+                snappedPos.x,
+                snappedPos.y,
                 BLOCK_SIZE - 4,
                 BLOCK_SIZE - 4,
                 {
@@ -209,12 +261,17 @@ export const BuildingArea = ({
                 if (body.speed < 0.1) {
                     Events.off(engineRef.current, 'afterUpdate', checkSettled);
                     Body.setStatic(body, true);
+
+                    // Get final position after physics simulation
+                    const finalPos = snapToGrid(body.position.x, body.position.y);
+                    Body.setPosition(body, finalPos);
+
                     onBlockPlaced({
                         ...item,
                         id: body.label,
                         position: {
-                            x: body.position.x - BLOCK_SIZE / 2,
-                            y: body.position.y - BLOCK_SIZE / 2,
+                            x: finalPos.x - BLOCK_SIZE / 2,
+                            y: finalPos.y - BLOCK_SIZE / 2,
                         },
                     });
                 }
