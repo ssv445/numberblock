@@ -13,6 +13,12 @@ export interface PlacedBlock extends Block {
     position: Position;
 }
 
+export interface BlockHandlers {
+    onBlockPlaced: (block: PlacedBlock) => void;
+    onBlockRemoved?: (blockId: string) => void;
+    onBlockMoved?: (blockId: string, newPosition: Position) => void;
+}
+
 export const BLOCK_COLORS = [
     '#FF0000', // Red
     '#FF7F00', // Orange

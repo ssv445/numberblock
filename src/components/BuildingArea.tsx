@@ -1,23 +1,70 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { Engine, Render, World, Bodies, Body, Events, Runner } from 'matter-js';
-import { Block, PlacedBlock } from '../types/block';
+import { useEffect, useRef, useCallback } from 'react';
+import { Engine, Render, World, Bodies, Body, Events, Runner, Mouse, MouseConstraint } from 'matter-js';
+import { Block, PlacedBlock, BlockHandlers } from '../types/block';
 import { useDrop } from 'react-dnd';
 
 const BLOCK_SIZE = 64;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 
-interface BuildingAreaProps {
-    onBlockPlaced: (block: PlacedBlock) => void;
+interface BuildingAreaProps extends BlockHandlers {
     placedBlocks: PlacedBlock[];
 }
 
-export const BuildingArea = ({ onBlockPlaced, placedBlocks }: BuildingAreaProps) => {
+type DragEvent = {
+    source: {
+        body: Matter.Body;
+    };
+};
+
+export const BuildingArea = ({
+    onBlockPlaced,
+    placedBlocks,
+    onBlockRemoved = () => { },
+    onBlockMoved = () => { }
+}: BuildingAreaProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const engineRef = useRef<Engine>();
     const worldRef = useRef<World>();
+    const mouseConstraintRef = useRef<MouseConstraint>();
+    const blockBodiesRef = useRef(new Map<string, Matter.Body>());
+
+    const handleBlockDrag = useCallback((e: DragEvent) => {
+        const body = e.source.body;
+        if (body && body.label) {
+            Body.setStatic(body, false);
+        }
+    }, []);
+
+    const handleBlockDragEnd = useCallback((e: DragEvent) => {
+        const body = e.source.body;
+        if (!body || !body.label) return;
+
+        // Check if block is outside the building area
+        const isOutside =
+            body.position.x < 0 ||
+            body.position.x > CANVAS_WIDTH ||
+            body.position.y < 0 ||
+            body.position.y > CANVAS_HEIGHT;
+
+        if (isOutside) {
+            // Remove block
+            if (worldRef.current) {
+                World.remove(worldRef.current, body);
+                onBlockRemoved(body.label);
+                blockBodiesRef.current.delete(body.label);
+            }
+        } else {
+            // Update block position
+            Body.setStatic(body, true);
+            onBlockMoved(body.label, {
+                x: body.position.x - BLOCK_SIZE / 2,
+                y: body.position.y - BLOCK_SIZE / 2
+            });
+        }
+    }, [onBlockRemoved, onBlockMoved]);
 
     // Initialize physics engine
     useEffect(() => {
@@ -26,7 +73,7 @@ export const BuildingArea = ({ onBlockPlaced, placedBlocks }: BuildingAreaProps)
         // Create engine and world
         const engine = Engine.create({
             enableSleeping: true,
-            gravity: { x: 0, y: 1, scale: 0.001 } // Reduced gravity for better control
+            gravity: { x: 0, y: 1, scale: 0.001 }
         });
         const world = engine.world;
         engineRef.current = engine;
@@ -45,6 +92,20 @@ export const BuildingArea = ({ onBlockPlaced, placedBlocks }: BuildingAreaProps)
             }
         });
 
+        // Add mouse control
+        const mouse = Mouse.create(render.canvas);
+        const mouseConstraint = MouseConstraint.create(engine, {
+            mouse: mouse,
+            constraint: {
+                stiffness: 0.2,
+                render: {
+                    visible: false
+                }
+            }
+        });
+        mouseConstraintRef.current = mouseConstraint;
+        World.add(world, mouseConstraint);
+
         // Create walls with friction
         const wallOptions = {
             isStatic: true,
@@ -54,13 +115,14 @@ export const BuildingArea = ({ onBlockPlaced, placedBlocks }: BuildingAreaProps)
         };
 
         const walls = [
-            Bodies.rectangle(CANVAS_WIDTH / 2, CANVAS_HEIGHT + 30, CANVAS_WIDTH, 60, wallOptions), // Bottom
-            Bodies.rectangle(-30, CANVAS_HEIGHT / 2, 60, CANVAS_HEIGHT, wallOptions), // Left
-            Bodies.rectangle(CANVAS_WIDTH + 30, CANVAS_HEIGHT / 2, 60, CANVAS_HEIGHT, wallOptions), // Right
+            Bodies.rectangle(CANVAS_WIDTH / 2, CANVAS_HEIGHT + 30, CANVAS_WIDTH, 60, wallOptions),
+            Bodies.rectangle(-30, CANVAS_HEIGHT / 2, 60, CANVAS_HEIGHT, wallOptions),
+            Bodies.rectangle(CANVAS_WIDTH + 30, CANVAS_HEIGHT / 2, 60, CANVAS_HEIGHT, wallOptions),
         ];
         World.add(world, walls);
 
-        // Add existing blocks with friction
+        // Add existing blocks
+        blockBodiesRef.current.clear();
         placedBlocks.forEach(block => {
             const body = Bodies.rectangle(
                 block.position.x + BLOCK_SIZE / 2,
@@ -73,12 +135,17 @@ export const BuildingArea = ({ onBlockPlaced, placedBlocks }: BuildingAreaProps)
                     render: {
                         fillStyle: block.color,
                     },
-                    label: block.value.toString(),
+                    label: block.id,
                 }
             );
             Body.setStatic(body, true);
             World.add(world, body);
+            blockBodiesRef.current.set(block.id, body);
         });
+
+        // Add drag event listeners
+        Events.on(mouseConstraint, 'startdrag', handleBlockDrag as any);
+        Events.on(mouseConstraint, 'enddrag', handleBlockDragEnd as any);
 
         // Start the engine
         const runner = Runner.create();
@@ -87,12 +154,19 @@ export const BuildingArea = ({ onBlockPlaced, placedBlocks }: BuildingAreaProps)
 
         // Cleanup
         return () => {
+            Events.off(mouseConstraint, 'startdrag', handleBlockDrag as any);
+            Events.off(mouseConstraint, 'enddrag', handleBlockDragEnd as any);
             Render.stop(render);
             Runner.stop(runner);
             World.clear(world, true);
             Engine.clear(engine);
+            if (mouse.element) {
+                const element = mouse.element as HTMLElement;
+                element.removeEventListener('wheel', mouse.mousewheel as any);
+                element.removeEventListener('DOMMouseScroll', mouse.mousewheel as any);
+            }
         };
-    }, [placedBlocks]);
+    }, [placedBlocks, handleBlockDrag, handleBlockDragEnd]);
 
     const [{ isOver }, drop] = useDrop<Block, void, { isOver: boolean }>({
         accept: 'BLOCK',
@@ -106,7 +180,7 @@ export const BuildingArea = ({ onBlockPlaced, placedBlocks }: BuildingAreaProps)
             const x = offset.x - canvasRect.left;
             const y = offset.y - canvasRect.top;
 
-            // Create new block body with physics properties
+            // Create new block body
             const body = Bodies.rectangle(
                 x,
                 y,
@@ -115,16 +189,17 @@ export const BuildingArea = ({ onBlockPlaced, placedBlocks }: BuildingAreaProps)
                 {
                     friction: 0.8,
                     restitution: 0.2,
-                    density: 0.001, // Light blocks for better stacking
+                    density: 0.001,
                     render: {
                         fillStyle: item.color,
                     },
-                    label: item.value.toString(),
+                    label: `block-${Date.now()}`,
                 }
             );
 
             // Add block to world
             World.add(worldRef.current, body);
+            blockBodiesRef.current.set(body.label, body);
 
             // Wait for block to settle
             const checkSettled = () => {
@@ -135,6 +210,7 @@ export const BuildingArea = ({ onBlockPlaced, placedBlocks }: BuildingAreaProps)
                     Body.setStatic(body, true);
                     onBlockPlaced({
                         ...item,
+                        id: body.label,
                         position: {
                             x: body.position.x - BLOCK_SIZE / 2,
                             y: body.position.y - BLOCK_SIZE / 2,
@@ -153,7 +229,7 @@ export const BuildingArea = ({ onBlockPlaced, placedBlocks }: BuildingAreaProps)
     });
 
     return (
-        <div ref={drop} className="relative mx-auto">
+        <div ref={drop as any} className="relative mx-auto">
             <canvas
                 ref={canvasRef}
                 width={CANVAS_WIDTH}
