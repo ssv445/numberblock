@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Block, GridCell, GRID_COLS, GRID_SIZE, MIN_ROWS, PlacedBlock, Position, gridToPixel, hasSupport, isValidPosition, pixelToGrid } from '@/types/block';
+import { Block, GridCell, GRID_COLS, GRID_SIZE, MIN_ROWS, PlacedBlock } from '@/types/block';
+import { Position, GridPosition } from '@/types/position';
 import { BlockSelector } from './BlockSelector';
+import { gridToPixel, hasSupport, isValidPosition, pixelToGrid } from '@/utils/grid';
 
 interface BuildingGridProps {
     onBlockMoved?: (blockId: string, newPosition: Position) => void;
@@ -16,6 +18,7 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
     const [selectedBlock, setSelectedBlock] = useState<PlacedBlock | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+    const [placedBlocks, setPlacedBlocks] = useState<Block[]>([]);
 
     // Initialize grid
     useEffect(() => {
@@ -28,12 +31,13 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
         setGrid(newGrid);
     }, [rows]);
 
-    const findEmptyCell = (): { row: number; col: number } | null => {
+    const findEmptyCell = (): GridPosition | null => {
         // Start from bottom-up to simulate gravity
         for (let row = grid.length - 1; row >= 0; row--) {
             for (let col = 0; col < GRID_COLS; col++) {
-                if (!grid[row][col].block && hasSupport(grid, row, col)) {
-                    return { row, col };
+                const pos: GridPosition = { x: col, y: row };
+                if (!grid[row][col].block && hasSupport(pos, placedBlocks)) {
+                    return pos;
                 }
             }
         }
@@ -43,31 +47,33 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
     const handleBlockSelect = (block: Block) => {
         const emptyCell = findEmptyCell();
         if (emptyCell) {
-            const position = gridToPixel(emptyCell.row, emptyCell.col);
+            const position = gridToPixel(emptyCell);
             addBlock(block, position);
         }
     };
 
-    const addBlock = (block: Block, position: Position) => {
-        const { row, col } = pixelToGrid(position.x, position.y);
+    const addBlock = (block: Block, position: Position): boolean => {
+        const gridPos = pixelToGrid(position);
+        if (!gridPos) return false;
 
         // Check if position is valid
-        if (!isValidPosition(grid, row, col)) return false;
+        if (!isValidPosition(gridPos, placedBlocks)) return false;
 
         // Check if block has support
-        if (!hasSupport(grid, row, col)) return false;
+        if (!hasSupport(gridPos, placedBlocks)) return false;
 
         // Check if cell is empty
-        if (grid[row][col].block !== null) return false;
+        if (grid[gridPos.y][gridPos.x].block !== null) return false;
 
         const newGrid = [...grid];
         const placedBlock: PlacedBlock = {
             ...block,
             id: `placed-${Date.now()}`,
-            position: gridToPixel(row, col)
+            position: gridToPixel(gridPos)
         };
-        newGrid[row][col].block = placedBlock;
+        newGrid[gridPos.y][gridPos.x].block = placedBlock;
         setGrid(newGrid);
+        setPlacedBlocks(prev => [...prev, placedBlock]);
         return true;
     };
 
@@ -88,56 +94,64 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
         const x = touch.clientX - rect.left;
         const y = touch.clientY - rect.top;
 
-        // Get target grid position
-        const { row, col } = pixelToGrid(x, y);
+        const pos: Position = { x, y };
+        const gridPos = pixelToGrid(pos);
+        if (!gridPos) return;
 
         // Only proceed if we're within grid bounds
-        if (!isValidPosition(grid, row, col)) return;
+        if (!isValidPosition(gridPos, placedBlocks)) return;
 
-        const oldPos = pixelToGrid(selectedBlock.position.x, selectedBlock.position.y);
+        const oldGridPos = pixelToGrid(selectedBlock.position);
+        if (!oldGridPos) return;
 
         // Don't update if we're in the same cell
-        if (oldPos.row === row && oldPos.col === col) return;
+        if (oldGridPos.x === gridPos.x && oldGridPos.y === gridPos.y) return;
 
         // Check if target cell is empty
-        if (!grid[row][col].block) {
-            const newPosition = {
-                x: col * GRID_SIZE,
-                y: row * GRID_SIZE
-            };
+        if (!grid[gridPos.y][gridPos.x].block) {
+            const newPosition = gridToPixel(gridPos);
 
             const newGrid = [...grid];
-            newGrid[oldPos.row][oldPos.col].block = null;
+            newGrid[oldGridPos.y][oldGridPos.x].block = null;
             const movedBlock = { ...selectedBlock, position: newPosition };
-            newGrid[row][col].block = movedBlock;
+            newGrid[gridPos.y][gridPos.x].block = movedBlock;
             setGrid(newGrid);
             onBlockMoved?.(selectedBlock.id, newPosition);
             setSelectedBlock(movedBlock);
+
+            // Update placed blocks
+            setPlacedBlocks(prev =>
+                prev.map(b => b.id === selectedBlock.id ? movedBlock : b)
+            );
         }
     };
 
     const handleTouchEnd = (e: React.TouchEvent) => {
         if (selectedBlock) {
-            const { row, col } = pixelToGrid(selectedBlock.position.x, selectedBlock.position.y);
+            const gridPos = pixelToGrid(selectedBlock.position);
+            if (!gridPos) return;
 
             // If block doesn't have support, move it down until it does
-            if (!hasSupport(grid, row, col)) {
-                let newRow = row;
-                while (newRow < grid.length - 1 && !grid[newRow + 1][col].block) {
-                    newRow++;
+            if (!hasSupport(gridPos, placedBlocks)) {
+                let newY = gridPos.y;
+                while (newY < grid.length - 1 && !grid[newY + 1][gridPos.x].block) {
+                    newY++;
                 }
 
-                const newPosition = {
-                    x: col * GRID_SIZE,
-                    y: newRow * GRID_SIZE
-                };
+                const newGridPos: GridPosition = { x: gridPos.x, y: newY };
+                const newPosition = gridToPixel(newGridPos);
 
                 const newGrid = [...grid];
-                newGrid[row][col].block = null;
+                newGrid[gridPos.y][gridPos.x].block = null;
                 const movedBlock = { ...selectedBlock, position: newPosition };
-                newGrid[newRow][col].block = movedBlock;
+                newGrid[newY][gridPos.x].block = movedBlock;
                 setGrid(newGrid);
                 onBlockMoved?.(selectedBlock.id, newPosition);
+
+                // Update placed blocks
+                setPlacedBlocks(prev =>
+                    prev.map(b => b.id === selectedBlock.id ? movedBlock : b)
+                );
             }
         }
 
@@ -153,6 +167,24 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
         newGrid[row][col].block = null;
         setGrid(newGrid);
         onBlockRemoved?.(blockId);
+    };
+
+    const handleDragStart = (e: React.DragEvent) => {
+        if (!selectedBlock) return;
+        setIsDragging(true);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        if (!selectedBlock || !isDragging) return;
+
+        const gridPos = pixelToGrid({ x: e.clientX, y: e.clientY });
+        if (!gridPos) return;
+
+        setSelectedBlock(prev => {
+            if (!prev) return null;
+            return { ...prev, position: gridPos };
+        });
     };
 
     return (
