@@ -1,36 +1,46 @@
 import { BlockPattern, PatternMap } from '../types';
 
 // Helper function to create a line pattern
-const createLine = (num: number, vertical = false): BlockPattern => {
+const createLine = (num: number, vertical = false, value?: number): BlockPattern => {
     return Array.from({ length: num }, (_, i) => ({
         x: vertical ? 0 : i,
         y: vertical ? i : 0,
+        value,
     }));
 };
 
 // Helper function to create a rectangle pattern
-const createRectangle = (width: number, height: number): BlockPattern => {
+const createRectangle = (width: number, height: number, value?: number): BlockPattern => {
     const pattern: BlockPattern = [];
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-            pattern.push({ x, y });
+            pattern.push({ x, y, value });
         }
     }
     return pattern;
 };
 
 // Helper function to create an L pattern
-const createL = (width: number, height: number): BlockPattern => {
+const createL = (width: number, height: number, value?: number): BlockPattern => {
     const pattern: BlockPattern = [];
     // Vertical line
     for (let y = 0; y < height; y++) {
-        pattern.push({ x: 0, y });
+        pattern.push({ x: 0, y, value });
     }
     // Horizontal line
     for (let x = 1; x < width; x++) {
-        pattern.push({ x, y: height - 1 });
+        pattern.push({ x, y: height - 1, value });
     }
     return pattern;
+};
+
+// Helper function to offset a pattern
+const offsetPattern = (pattern: BlockPattern, offsetX: number, offsetY: number): BlockPattern => {
+    return pattern.map(coord => ({
+        ...coord,
+        x: coord.x + offsetX,
+        y: coord.y + offsetY,
+    }));
 };
 
 export const allPatterns: PatternMap = {
@@ -56,7 +66,6 @@ export const allPatterns: PatternMap = {
         createLine(5), // Horizontal line
         createLine(5, true), // Vertical line
         createL(3, 3), // L shape
-        [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }], // T shape
     ],
     6: [
         createRectangle(2, 3), // 2x3 rectangle
@@ -87,59 +96,74 @@ export const allPatterns: PatternMap = {
         createLine(10, true), // Vertical line
     ],
     11: [
-        createLine(11), // Horizontal line
-        createLine(11, true), // Vertical line
-        [...createRectangle(3, 3), { x: 3, y: 0 }, { x: 3, y: 2 }], // Modified square
+        // 11 as 10+1
+        [
+            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
+            { x: 2, y: 2, value: 1 }
+        ],
     ],
     12: [
-        createRectangle(3, 4), // 3x4 rectangle
-        createRectangle(4, 3), // 4x3 rectangle
-        createLine(12), // Horizontal line
-        createLine(12, true), // Vertical line
+        // 12 as 10+2
+        [
+            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
+            ...offsetPattern(createLine(2, false, 2), 2, 2)
+        ],
     ],
     13: [
-        createLine(13), // Horizontal line
-        createLine(13, true), // Vertical line
-        [...createRectangle(3, 4), { x: 3, y: 1 }], // Modified rectangle
+        // 13 as 10+3
+        [
+            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
+            ...offsetPattern(createLine(3, false, 3), 2, 2)
+        ],
     ],
     14: [
-        createRectangle(2, 7), // 2x7 rectangle
-        createRectangle(7, 2), // 7x2 rectangle
-        createLine(14), // Horizontal line
-        createLine(14, true), // Vertical line
+        // 14 as 10+4
+        [
+            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
+            ...offsetPattern(createRectangle(2, 2, 4), 2, 2)
+        ],
     ],
     15: [
-        createRectangle(3, 5), // 3x5 rectangle
-        createRectangle(5, 3), // 5x3 rectangle
-        createLine(15), // Horizontal line
-        createLine(15, true), // Vertical line
+        // 15 as 10+5
+        [
+            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
+            ...offsetPattern(createLine(5, false, 5), 2, 2)
+        ],
     ],
     16: [
-        createRectangle(4, 4), // Square
-        createLine(16), // Horizontal line
-        createLine(16, true), // Vertical line
+        // 16 as 10+6
+        [
+            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
+            ...offsetPattern(createRectangle(2, 3, 6), 2, 2)
+        ],
     ],
     17: [
-        createLine(17), // Horizontal line
-        createLine(17, true), // Vertical line
-        [...createRectangle(4, 4), { x: 4, y: 0 }], // Modified square
+        // 17 as 10+7
+        [
+            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
+            ...offsetPattern(createLine(7, false, 7), 2, 2)
+        ],
     ],
     18: [
-        createRectangle(3, 6), // 3x6 rectangle
-        createRectangle(6, 3), // 6x3 rectangle
-        createLine(18), // Horizontal line
-        createLine(18, true), // Vertical line
+        // 18 as 10+8
+        [
+            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
+            ...offsetPattern(createRectangle(2, 4, 8), 2, 1)
+        ],
     ],
     19: [
-        createLine(19), // Horizontal line
-        createLine(19, true), // Vertical line
-        [...createRectangle(4, 4), { x: 4, y: 0 }, { x: 4, y: 2 }, { x: 0, y: 4 }], // Modified square
+        // 19 as 10+9
+        [
+            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
+            ...offsetPattern(createRectangle(3, 3, 9), 2, 1)
+        ],
     ],
     20: [
-        createRectangle(4, 5), // 4x5 rectangle
-        createRectangle(5, 4), // 5x4 rectangle
-        createLine(20), // Horizontal line
-        createLine(20, true), // Vertical line
+        // 20 as two 10s
+        [
+            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
+            ...offsetPattern(createRectangle(2, 5, 10), 2, 0)
+        ],
     ],
 };
 

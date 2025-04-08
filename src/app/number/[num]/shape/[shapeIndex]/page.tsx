@@ -4,16 +4,13 @@ import BlockDisplay from '../../../../../components/BlockDisplay';
 import PatternNavigator from '../../../../../components/PatternNavigator';
 import { getPattern, getTotalPatternsForNumber } from '../../../../../utils/patterns';
 
-interface Props {
-    params: {
-        num: string;
-        shapeIndex: string;
-    };
-}
-
-export default async function ShapePage({ params }: Props) {
-    const number = parseInt(params.num, 10);
-    const shapeIndex = parseInt(params.shapeIndex, 10);
+export default async function ShapePage({
+    params,
+}: {
+    params: { num: string; shapeIndex: string };
+}) {
+    const number = Number(params.num);
+    const shapeIndex = Number(params.shapeIndex);
 
     // Validate parameters
     if (

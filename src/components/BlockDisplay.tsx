@@ -1,6 +1,7 @@
 'use client';
 
 import { BlockPattern } from '../types';
+import { numberColors, rainbowColors } from '../utils/colors';
 
 interface BlockDisplayProps {
     pattern: BlockPattern;
@@ -14,13 +15,27 @@ export default function BlockDisplay({ pattern, number }: BlockDisplayProps) {
 
     // Create a grid representation
     const grid = Array.from({ length: maxY }, () =>
-        Array.from({ length: maxX }, () => false)
+        Array.from({ length: maxX }, () => ({ isBlock: false, value: 0 }))
     );
 
     // Fill in the blocks
-    pattern.forEach(({ x, y }) => {
-        grid[y][x] = true;
+    pattern.forEach(({ x, y, value }) => {
+        grid[y][x] = { isBlock: true, value: value ?? number };
     });
+
+    // Get color for a block based on its value
+    const getBlockColor = (value: number, index: number) => {
+        if (!value) return { bg: 'bg-gray-400', border: 'border-gray-600' };
+        if (value === 7) {
+            return rainbowColors[index % rainbowColors.length];
+        }
+        // For numbers > 10, use the color of the first digit
+        const baseValue = value > 10 ? Math.floor(value / 10) : value;
+        return numberColors[baseValue] || { bg: 'bg-gray-400', border: 'border-gray-600' };
+    };
+
+    // Count blocks to track rainbow sequence
+    let blockCount = 0;
 
     return (
         <div className="flex flex-col items-center gap-4">
@@ -32,15 +47,22 @@ export default function BlockDisplay({ pattern, number }: BlockDisplayProps) {
                 }}
             >
                 {grid.map((row, y) =>
-                    row.map((isBlock, x) => (
-                        <div
-                            key={`${x}-${y}`}
-                            className={`w-full h-full rounded transition-colors ${isBlock
-                                    ? 'bg-blue-500 border-2 border-blue-700 shadow-sm'
+                    row.map(({ isBlock, value }, x) => {
+                        const blockColor = isBlock ? getBlockColor(value, blockCount++) : null;
+
+                        return (
+                            <div
+                                key={`${x}-${y}`}
+                                className={`w-full h-full rounded-md transition-colors ${isBlock
+                                    ? `${blockColor?.bg} border-2 ${blockColor?.border} shadow-sm`
                                     : 'border border-dashed border-gray-300'
-                                }`}
-                        />
-                    ))
+                                    }`}
+                                style={{
+                                    aspectRatio: '1',
+                                }}
+                            />
+                        );
+                    })
                 )}
             </div>
         </div>
