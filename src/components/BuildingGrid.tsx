@@ -17,7 +17,6 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
     const [isDragging, setIsDragging] = useState(false);
     const longPressTimer = useRef<NodeJS.Timeout>();
     const [scrollOffset, setScrollOffset] = useState({ x: 0, y: 0 });
-    const [lastClickPosition, setLastClickPosition] = useState<Position | null>(null);
 
     // Initialize grid
     useEffect(() => {
@@ -30,15 +29,7 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
         setGrid(newGrid);
     }, [rows]);
 
-    const handleGridClick = (e: React.MouseEvent) => {
-        if (!gridRef.current) return;
-        const rect = gridRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        setLastClickPosition({ x, y });
-    };
-
-    const findEmptyCell = (): GridPosition | null => {
+    const findEmptyCell = (): { row: number; col: number } | null => {
         // Start from bottom-up to simulate gravity
         for (let row = grid.length - 1; row >= 0; row--) {
             for (let col = 0; col < GRID_COLS; col++) {
@@ -108,10 +99,13 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
             clearTimeout(longPressTimer.current);
         }
 
-        if (!selectedBlock) return;
+        if (!selectedBlock || !isDragging) {
+            setIsDragging(true);
+            return;
+        }
+
         e.stopPropagation();
 
-        setIsDragging(true);
         const touch = e.touches[0];
         const { row, col } = pixelToGrid(
             touch.clientX - scrollOffset.x,
@@ -122,13 +116,15 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
             const newPosition = gridToPixel(row, col);
             const oldPos = pixelToGrid(selectedBlock.position.x, selectedBlock.position.y);
 
-            // Only update if position changed
-            if (oldPos.row !== row || oldPos.col !== col) {
+            // Only update if position changed and target cell is empty
+            if ((oldPos.row !== row || oldPos.col !== col) && !grid[row][col].block) {
                 const newGrid = [...grid];
                 newGrid[oldPos.row][oldPos.col].block = null;
-                newGrid[row][col].block = { ...selectedBlock, position: newPosition };
+                const movedBlock = { ...selectedBlock, position: newPosition };
+                newGrid[row][col].block = movedBlock;
                 setGrid(newGrid);
                 onBlockMoved?.(selectedBlock.id, newPosition);
+                setSelectedBlock(movedBlock);
             }
         }
     };
@@ -152,54 +148,57 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
     };
 
     return (
-        <div className="relative">
-            <div
-                ref={gridRef}
-                className="relative w-full overflow-auto bg-white rounded-lg border-2 border-dashed border-gray-300"
-                style={{
-                    height: `${rows * GRID_SIZE}px`,
-                    width: `${GRID_COLS * GRID_SIZE}px`,
-                }}
-                onClick={handleGridClick}
-            >
-                {/* Grid lines */}
-                <div className="absolute inset-0">
-                    {Array(rows).fill(null).map((_, row) => (
-                        <div key={row} className="absolute w-full border-t border-gray-100"
-                            style={{ top: `${row * GRID_SIZE}px` }} />
-                    ))}
-                    {Array(GRID_COLS).fill(null).map((_, col) => (
-                        <div key={col} className="absolute h-full border-l border-gray-100"
-                            style={{ left: `${col * GRID_SIZE}px` }} />
-                    ))}
-                </div>
+        <div className="relative flex flex-col h-screen">
+            <div className="flex-1 overflow-auto">
+                <div
+                    ref={gridRef}
+                    className="relative mx-auto bg-white rounded-lg border-2 border-dashed border-gray-300"
+                    style={{
+                        height: `${rows * GRID_SIZE}px`,
+                        width: `${GRID_COLS * GRID_SIZE}px`,
+                        maxWidth: '100%',
+                        maxHeight: 'calc(100vh - 120px)'
+                    }}
+                >
+                    {/* Grid lines */}
+                    <div className="absolute inset-0">
+                        {Array(rows).fill(null).map((_, row) => (
+                            <div key={row} className="absolute w-full border-t border-gray-100"
+                                style={{ top: `${row * GRID_SIZE}px` }} />
+                        ))}
+                        {Array(GRID_COLS).fill(null).map((_, col) => (
+                            <div key={col} className="absolute h-full border-l border-gray-100"
+                                style={{ left: `${col * GRID_SIZE}px` }} />
+                        ))}
+                    </div>
 
-                {/* Blocks */}
-                {grid.map((row, rowIndex) =>
-                    row.map((cell, colIndex) => cell.block && (
-                        <div
-                            key={cell.block.id}
-                            className={`absolute touch-none transition-transform ${isDragging && selectedBlock?.id === cell.block.id ? 'scale-110' : ''}`}
-                            style={{
-                                width: `${GRID_SIZE}px`,
-                                height: `${GRID_SIZE}px`,
-                                transform: `translate(${colIndex * GRID_SIZE}px, ${rowIndex * GRID_SIZE}px)`,
-                            }}
-                            onTouchStart={(e) => handleTouchStart(e, cell.block!)}
-                            onTouchMove={handleTouchMove}
-                            onTouchEnd={handleTouchEnd}
-                        >
+                    {/* Blocks */}
+                    {grid.map((row, rowIndex) =>
+                        row.map((cell, colIndex) => cell.block && (
                             <div
-                                className="w-full h-full rounded-lg shadow-md flex items-center justify-center text-white font-bold"
-                                style={{ backgroundColor: cell.block.color }}
+                                key={cell.block.id}
+                                className={`absolute touch-none transition-transform ${isDragging && selectedBlock?.id === cell.block.id ? 'scale-110' : ''}`}
+                                style={{
+                                    width: `${GRID_SIZE}px`,
+                                    height: `${GRID_SIZE}px`,
+                                    transform: `translate(${colIndex * GRID_SIZE}px, ${rowIndex * GRID_SIZE}px)`,
+                                }}
+                                onTouchStart={(e) => handleTouchStart(e, cell.block!)}
+                                onTouchMove={handleTouchMove}
+                                onTouchEnd={handleTouchEnd}
                             >
-                                {cell.block.value}
+                                <div
+                                    className="w-full h-full rounded-lg shadow-md"
+                                    style={{ backgroundColor: cell.block.color }}
+                                />
                             </div>
-                        </div>
-                    ))
-                )}
+                        ))
+                    )}
+                </div>
             </div>
-            <BlockSelector onBlockSelect={handleBlockSelect} />
+            <div className="fixed bottom-4 right-4 z-50">
+                <BlockSelector onBlockSelect={handleBlockSelect} />
+            </div>
         </div>
     );
 }; 

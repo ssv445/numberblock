@@ -1,34 +1,15 @@
 'use client';
 
-import { BlockPalette } from '@/components/BlockPalette';
 import { BuildingGrid } from '@/components/BuildingGrid';
-import { useState } from 'react';
 import { Block, Position } from '@/types/block';
 
 export default function Home() {
-    const [placedBlocks, setPlacedBlocks] = useState<Block[]>([]);
-
-    const handleBlockDrop = (block: Block, x: number, y: number) => {
-        const newBlock = {
-            ...block,
-            id: `placed-${Date.now()}`,
-            position: { x, y }
-        };
-        setPlacedBlocks([...placedBlocks, newBlock]);
-    };
-
     const handleBlockMoved = (blockId: string, newPosition: Position) => {
-        setPlacedBlocks(blocks =>
-            blocks.map(block =>
-                block.id === blockId
-                    ? { ...block, position: newPosition }
-                    : block
-            )
-        );
+        // Handle block movement if needed
     };
 
     const handleBlockRemoved = (blockId: string) => {
-        setPlacedBlocks(blocks => blocks.filter(block => block.id !== blockId));
+        // Handle block removal if needed
     };
 
     return (
