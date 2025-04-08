@@ -19,15 +19,27 @@ export interface BlockHandlers {
     onBlockMoved?: (blockId: string, newPosition: Position) => void;
 }
 
+// Colors from Numberblocks 1-10
 export const BLOCK_COLORS = [
+    '#FF0000', // Red - 1
+    '#FFA500', // Orange - 2
+    '#FFFF00', // Yellow - 3
+    '#008000', // Green - 4
+    '#0000FF', // Blue - 5
+    '#4B0082', // Indigo - 6
+    '#EE82EE', // Violet - 7
+    '#800080', // Purple - 8
+    '#FFC0CB', // Pink - 9
+    '#A52A2A', // Brown - 10
+] as const;
+
+// Rainbow colors for number 7
+export const RAINBOW_COLORS = [
     '#FF0000', // Red
-    '#FF7F00', // Orange
+    '#FFA500', // Orange
     '#FFFF00', // Yellow
-    '#00FF00', // Green
+    '#008000', // Green
     '#0000FF', // Blue
     '#4B0082', // Indigo
-    '#9400D3', // Violet
-    '#FF1493', // Pink
-    '#00FFFF', // Cyan
-    '#8B4513', // Brown
-] as const; 
+    '#EE82EE', // Violet
+]; 
