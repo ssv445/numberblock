@@ -13,10 +13,10 @@ interface BlockItemProps {
 
 const BlockItem = ({ block, onTouchStart, onTouchMove, onTouchEnd }: BlockItemProps) => {
     if (block.value === 7) {
-        const stripeHeight = 64 / RAINBOW_COLORS.length;
+        const stripeHeight = 48 / RAINBOW_COLORS.length;
         return (
             <div
-                className="relative w-16 h-16 touch-none select-none"
+                className="relative w-12 h-12 md:w-16 md:h-16 touch-none select-none rounded-lg shadow-md"
                 onTouchStart={(e) => onTouchStart(e, block)}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
@@ -32,7 +32,7 @@ const BlockItem = ({ block, onTouchStart, onTouchMove, onTouchEnd }: BlockItemPr
                         }}
                     />
                 ))}
-                <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-2xl">
+                <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-lg md:text-2xl">
                     {block.value}
                 </div>
             </div>
@@ -41,7 +41,7 @@ const BlockItem = ({ block, onTouchStart, onTouchMove, onTouchEnd }: BlockItemPr
 
     return (
         <div
-            className="w-16 h-16 flex items-center justify-center text-white font-bold text-2xl touch-none select-none"
+            className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center text-white font-bold text-lg md:text-2xl touch-none select-none rounded-lg shadow-md"
             style={{ backgroundColor: block.color }}
             onTouchStart={(e) => onTouchStart(e, block)}
             onTouchMove={onTouchMove}
@@ -60,9 +60,9 @@ export const BlockPalette = () => {
     }));
 
     const handleTouchStart = (e: TouchEvent, block: Block) => {
-        e.preventDefault();
+        e.stopPropagation();
         const touch = e.touches[0];
-        const target = e.target as HTMLElement;
+        const target = e.currentTarget as HTMLElement;
         const rect = target.getBoundingClientRect();
 
         // Create a ghost element
@@ -74,11 +74,12 @@ export const BlockPalette = () => {
         ghost.style.opacity = '0.8';
         ghost.style.zIndex = '1000';
         ghost.style.pointerEvents = 'none';
+        ghost.style.transform = 'scale(1.1)';
         document.body.appendChild(ghost);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-        e.preventDefault();
+        e.stopPropagation();
         const touch = e.touches[0];
         const ghost = document.getElementById('ghost-block');
         if (ghost) {
@@ -88,17 +89,20 @@ export const BlockPalette = () => {
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-        e.preventDefault();
+        e.stopPropagation();
         const ghost = document.getElementById('ghost-block');
         if (ghost) {
-            ghost.remove();
+            ghost.style.transition = 'all 0.2s ease-out';
+            ghost.style.opacity = '0';
+            ghost.style.transform = 'scale(0.8)';
+            setTimeout(() => ghost.remove(), 200);
         }
     };
 
     return (
-        <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Block Palette</h2>
-            <div className="grid grid-cols-5 gap-4">
+        <div className="p-2 md:p-4 w-full max-w-md mx-auto">
+            <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Block Palette</h2>
+            <div className="grid grid-cols-5 gap-2 md:gap-4">
                 {blocks.map((block) => (
                     <BlockItem
                         key={block.id}

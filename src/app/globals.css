@@ -5,16 +5,25 @@
 /* Touch-related styles */
 * {
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
+html,
 body {
   overscroll-behavior: none;
-  touch-action: none;
+  touch-action: manipulation;
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  overflow: hidden;
 }
 
 #ghost-block {
   will-change: transform;
   pointer-events: none;
   touch-action: none;
-  transition: transform 0.1s ease-out;
+  transition: all 0.2s ease-out;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
