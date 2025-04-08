@@ -4,6 +4,6 @@ export type Coordinate = {
     value?: number; // The value of the block (for composite numbers)
 };
 
-export type BlockPattern = Coordinate[];
+export type BlockPattern = Array<Coordinate>;
 
 export type PatternMap = Record<number, BlockPattern[]>; 

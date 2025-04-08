@@ -1,174 +1,261 @@
-import { BlockPattern, PatternMap } from '../types';
+import { BlockPattern } from '../types';
 
-// Helper function to create a line pattern
-const createLine = (num: number, vertical = false, value?: number): BlockPattern => {
-    return Array.from({ length: num }, (_, i) => ({
-        x: vertical ? 0 : i,
-        y: vertical ? i : 0,
+const number1 = [
+    [1]
+];
+
+const number2 = [
+    [1, 1],
+    [2]
+];
+
+const number3 = [
+    [1, 1, 1],
+    [1, 2],
+    [3],
+];
+
+const number4 = [
+    [1, 1, 1, 1],
+    [2, 2],
+    [1, 3],
+    [4],
+];
+
+const number5 = [
+    [1, 1, 1, 1, 1],
+    [1, 3, 1],
+    [2, 2, 1],
+    [2, 3],
+    [4, 1],
+    [5],
+];
+
+const number6 = [
+    [1, 1, 1, 1, 1, 1],
+    [2, 2, 2],
+    [1, 3, 2],
+    [3, 3],
+    [2, 4],
+    [1, 5],
+    [6],
+];
+
+const number7 = [
+    [1, 1, 1, 1, 1, 1, 1],
+    [2, 2, 2, 1],
+    [1, 3, 3],
+    [3, 4],
+    [2, 5],
+    [1, 6],
+    [7],
+];
+
+const number8 = [
+
+];
+
+
+// Helper function to stringify a pattern for comparison
+function stringifyPattern(pattern: BlockPattern): string {
+    const sortedPattern = [...pattern].sort((a, b) => {
+        if (a.x !== b.x) return a.x - b.x;
+        return a.y - b.y;
+    });
+    return sortedPattern.map(c => `${c.x},${c.y}`).join(';');
+}
+
+// Helper function to normalize a pattern to start at (0,0)
+function normalizePattern(pattern: BlockPattern): BlockPattern {
+    if (pattern.length === 0) return [];
+
+    let minX = pattern[0].x;
+    let minY = pattern[0].y;
+    for (let i = 1; i < pattern.length; i++) {
+        minX = Math.min(minX, pattern[i].x);
+        minY = Math.min(minY, pattern[i].y);
+    }
+
+    return pattern.map(coord => ({
+        x: coord.x - minX,
+        y: coord.y - minY,
+        value: coord.value,
+    }));
+}
+
+// Helper function to rotate a pattern 90 degrees clockwise
+function rotatePattern(pattern: BlockPattern): BlockPattern {
+    const maxY = Math.max(...pattern.map(p => p.y));
+    return pattern.map(({ x, y, value }) => ({
+        x: maxY - y,
+        y: x,
         value,
     }));
-};
+}
 
-// Helper function to create a rectangle pattern
-const createRectangle = (width: number, height: number, value?: number): BlockPattern => {
-    const pattern: BlockPattern = [];
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            pattern.push({ x, y, value });
-        }
-    }
-    return pattern;
-};
-
-// Helper function to create an L pattern
-const createL = (width: number, height: number, value?: number): BlockPattern => {
-    const pattern: BlockPattern = [];
-    // Vertical line
-    for (let y = 0; y < height; y++) {
-        pattern.push({ x: 0, y, value });
-    }
-    // Horizontal line
-    for (let x = 1; x < width; x++) {
-        pattern.push({ x, y: height - 1, value });
-    }
-    return pattern;
-};
-
-// Helper function to offset a pattern
-const offsetPattern = (pattern: BlockPattern, offsetX: number, offsetY: number): BlockPattern => {
-    return pattern.map(coord => ({
-        ...coord,
-        x: coord.x + offsetX,
-        y: coord.y + offsetY,
+// Helper function to flip a pattern horizontally
+function flipPattern(pattern: BlockPattern): BlockPattern {
+    const maxX = Math.max(...pattern.map(p => p.x));
+    return pattern.map(({ x, y, value }) => ({
+        x: maxX - x,
+        y,
+        value,
     }));
-};
+}
 
-export const allPatterns: PatternMap = {
-    1: [
-        [{ x: 0, y: 0 }], // Single block
-    ],
-    2: [
-        createLine(2), // Horizontal line
-        createLine(2, true), // Vertical line
-    ],
-    3: [
-        createLine(3), // Horizontal line
-        createLine(3, true), // Vertical line
-        [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }], // L shape
-    ],
-    4: [
-        createRectangle(2, 2), // Square
-        createLine(4), // Horizontal line
-        createLine(4, true), // Vertical line
-        createL(2, 3), // L shape
-    ],
-    5: [
-        createLine(5), // Horizontal line
-        createLine(5, true), // Vertical line
-        createL(3, 3), // L shape
-    ],
-    6: [
-        createRectangle(2, 3), // 2x3 rectangle
-        createRectangle(3, 2), // 3x2 rectangle
-        createLine(6), // Horizontal line
-        createLine(6, true), // Vertical line
-    ],
-    7: [
-        createLine(7), // Horizontal line
-        createLine(7, true), // Vertical line
-        [...createRectangle(2, 3), { x: 2, y: 1 }], // Modified rectangle
-    ],
-    8: [
-        createRectangle(2, 4), // 2x4 rectangle
-        createRectangle(4, 2), // 4x2 rectangle
-        createLine(8), // Horizontal line
-        createLine(8, true), // Vertical line
-    ],
-    9: [
-        createRectangle(3, 3), // Square
-        createLine(9), // Horizontal line
-        createLine(9, true), // Vertical line
-    ],
-    10: [
-        createRectangle(2, 5), // 2x5 rectangle
-        createRectangle(5, 2), // 5x2 rectangle
-        createLine(10), // Horizontal line
-        createLine(10, true), // Vertical line
-    ],
-    11: [
-        // 11 as 10+1
-        [
-            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
-            { x: 2, y: 2, value: 1 }
-        ],
-    ],
-    12: [
-        // 12 as 10+2
-        [
-            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
-            ...offsetPattern(createLine(2, false, 2), 2, 2)
-        ],
-    ],
-    13: [
-        // 13 as 10+3
-        [
-            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
-            ...offsetPattern(createLine(3, false, 3), 2, 2)
-        ],
-    ],
-    14: [
-        // 14 as 10+4
-        [
-            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
-            ...offsetPattern(createRectangle(2, 2, 4), 2, 2)
-        ],
-    ],
-    15: [
-        // 15 as 10+5
-        [
-            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
-            ...offsetPattern(createLine(5, false, 5), 2, 2)
-        ],
-    ],
-    16: [
-        // 16 as 10+6
-        [
-            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
-            ...offsetPattern(createRectangle(2, 3, 6), 2, 2)
-        ],
-    ],
-    17: [
-        // 17 as 10+7
-        [
-            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
-            ...offsetPattern(createLine(7, false, 7), 2, 2)
-        ],
-    ],
-    18: [
-        // 18 as 10+8
-        [
-            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
-            ...offsetPattern(createRectangle(2, 4, 8), 2, 1)
-        ],
-    ],
-    19: [
-        // 19 as 10+9
-        [
-            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
-            ...offsetPattern(createRectangle(3, 3, 9), 2, 1)
-        ],
-    ],
-    20: [
-        // 20 as two 10s
-        [
-            ...offsetPattern(createRectangle(2, 5, 10), 0, 0),
-            ...offsetPattern(createRectangle(2, 5, 10), 2, 0)
-        ],
-    ],
-};
+// Generate all unique fixed polyominoes of size n
+function generateFixedPolyominoes(n: number, value?: number): BlockPattern[] {
+    if (n <= 0) return [];
+    if (n === 1) return [[{ x: 0, y: 0, value }]];
 
+    const uniquePatterns = new Set<string>();
+    const resultPatterns: BlockPattern[] = [];
+    const occupied = new Set<string>();
+    const currentPattern: { x: number; y: number; value?: number }[] = [];
+
+    function findPatterns(k: number) {
+        if (k === n) {
+            const normalized = normalizePattern([...currentPattern]);
+            const patternString = stringifyPattern(normalized);
+            if (!uniquePatterns.has(patternString)) {
+                uniquePatterns.add(patternString);
+                resultPatterns.push(normalized);
+            }
+            return;
+        }
+
+        const possibleNextCoords = new Set<string>();
+        const neighbors = [
+            { dx: 0, dy: 1 }, { dx: 0, dy: -1 },
+            { dx: 1, dy: 0 }, { dx: -1, dy: 0 }
+        ];
+
+        currentPattern.forEach(coord => {
+            neighbors.forEach(neighbor => {
+                const nextX = coord.x + neighbor.dx;
+                const nextY = coord.y + neighbor.dy;
+                const coordStr = `${nextX},${nextY}`;
+                if (!occupied.has(coordStr)) {
+                    possibleNextCoords.add(coordStr);
+                }
+            });
+        });
+
+        possibleNextCoords.forEach(coordStr => {
+            const [xStr, yStr] = coordStr.split(',');
+            const nextCoord = { x: parseInt(xStr, 10), y: parseInt(yStr, 10), value };
+
+            currentPattern.push(nextCoord);
+            occupied.add(coordStr);
+
+            findPatterns(k + 1);
+
+            occupied.delete(coordStr);
+            currentPattern.pop();
+        });
+    }
+
+    const startCoord = { x: 0, y: 0, value };
+    currentPattern.push(startCoord);
+    occupied.add("0,0");
+    findPatterns(1);
+
+    return resultPatterns;
+}
+
+// Generate all variations (rotations and reflections) of a pattern
+function generateVariations(pattern: BlockPattern): BlockPattern[] {
+    const variations: BlockPattern[] = [pattern];
+
+    // Add rotations
+    let rotated = pattern;
+    for (let i = 0; i < 3; i++) {
+        rotated = rotatePattern(rotated);
+        variations.push(rotated);
+    }
+
+    // Add flipped versions and their rotations
+    const flipped = flipPattern(pattern);
+    variations.push(flipped);
+    rotated = flipped;
+    for (let i = 0; i < 3; i++) {
+        rotated = rotatePattern(rotated);
+        variations.push(rotated);
+    }
+
+    // Remove duplicates
+    const uniqueVariations = Array.from(new Set(variations.map(p => stringifyPattern(p))))
+        .map(s => {
+            const coords = s.split(';').map(coord => {
+                const [x, y] = coord.split(',').map(Number);
+                return { x, y, value: pattern[0].value };
+            });
+            return coords;
+        });
+
+    return uniqueVariations;
+}
+
+// Pre-compute patterns for numbers 1-10
+const precomputedPatterns: Record<number, BlockPattern[]> = {};
+
+// Helper function to combine patterns
+function combinePatterns(pattern1: BlockPattern, pattern2: BlockPattern, offsetX: number, offsetY: number): BlockPattern {
+    return [
+        ...pattern1,
+        ...pattern2.map(coord => ({
+            x: coord.x + offsetX,
+            y: coord.y + offsetY,
+            value: coord.value,
+        })),
+    ];
+}
+
+// Generate patterns for numbers > 10 by combining smaller patterns
+function generateCompositePattern(num: number): BlockPattern[] {
+    const tens = Math.floor(num / 10);
+    const ones = num % 10;
+
+    if (ones === 0) {
+        // For multiples of 10, combine two patterns of 5
+        const patterns5 = generateFixedPolyominoes(5, 5);
+        return patterns5.flatMap(pattern5a =>
+            patterns5.map(pattern5b =>
+                combinePatterns(
+                    pattern5a,
+                    pattern5b,
+                    Math.max(...pattern5a.map(p => p.x)) + 2,
+                    0
+                )
+            )
+        );
+    }
+
+    // Combine a pattern of 10 with a pattern of the remainder
+    const patterns10 = generateFixedPolyominoes(10, 10);
+    const patternsOnes = generateFixedPolyominoes(ones, ones);
+
+    return patterns10.flatMap(pattern10 =>
+        patternsOnes.map(patternOnes =>
+            combinePatterns(
+                pattern10,
+                patternOnes,
+                Math.max(...pattern10.map(p => p.x)) + 2,
+                0
+            )
+        )
+    );
+}
+
+// Export functions
 export const getPatternsForNumber = (num: number): BlockPattern[] => {
-    return allPatterns[num] || [];
+    if (num <= 10) {
+        // Generate patterns on demand
+        const basePatterns = generateFixedPolyominoes(num, num);
+        // Generate all variations for each pattern
+        return basePatterns.flatMap(pattern => generateVariations(pattern));
+    }
+    return generateCompositePattern(num);
 };
 
 export const getPattern = (num: number, index: number): BlockPattern | null => {
