@@ -15,8 +15,7 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
     const gridRef = useRef<HTMLDivElement>(null);
     const [selectedBlock, setSelectedBlock] = useState<PlacedBlock | null>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const longPressTimer = useRef<NodeJS.Timeout>();
-    const [scrollOffset, setScrollOffset] = useState({ x: 0, y: 0 });
+    const touchStartPos = useRef<{ x: number; y: number } | null>(null);
 
     // Initialize grid
     useEffect(() => {
@@ -73,69 +72,78 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
     };
 
     const handleTouchStart = (e: React.TouchEvent, block: PlacedBlock) => {
-        e.stopPropagation();
+        const touch = e.touches[0];
+        touchStartPos.current = { x: touch.clientX, y: touch.clientY };
         setSelectedBlock(block);
-
-        // Start long press timer
-        longPressTimer.current = setTimeout(() => {
-            const { row, col } = pixelToGrid(block.position.x, block.position.y);
-            if (confirm('Delete this block?')) {
-                removeBlock(row, col);
-            }
-        }, 500); // 500ms for long press
-
-        if (gridRef.current) {
-            const rect = gridRef.current.getBoundingClientRect();
-            setScrollOffset({
-                x: rect.left + window.scrollX,
-                y: rect.top + window.scrollY
-            });
-        }
+        setIsDragging(true);
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
-        // Clear long press timer on move
-        if (longPressTimer.current) {
-            clearTimeout(longPressTimer.current);
-        }
-
-        if (!selectedBlock || !isDragging) {
-            setIsDragging(true);
-            return;
-        }
-
-        e.stopPropagation();
+        if (!selectedBlock || !gridRef.current) return;
 
         const touch = e.touches[0];
-        const { row, col } = pixelToGrid(
-            touch.clientX - scrollOffset.x,
-            touch.clientY - scrollOffset.y
-        );
+        const rect = gridRef.current.getBoundingClientRect();
 
-        if (isValidPosition(grid, row, col) && hasSupport(grid, row, col)) {
-            const newPosition = gridToPixel(row, col);
-            const oldPos = pixelToGrid(selectedBlock.position.x, selectedBlock.position.y);
+        // Calculate position relative to grid
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
 
-            // Only update if position changed and target cell is empty
-            if ((oldPos.row !== row || oldPos.col !== col) && !grid[row][col].block) {
-                const newGrid = [...grid];
-                newGrid[oldPos.row][oldPos.col].block = null;
-                const movedBlock = { ...selectedBlock, position: newPosition };
-                newGrid[row][col].block = movedBlock;
-                setGrid(newGrid);
-                onBlockMoved?.(selectedBlock.id, newPosition);
-                setSelectedBlock(movedBlock);
-            }
+        // Get target grid position
+        const { row, col } = pixelToGrid(x, y);
+
+        // Only proceed if we're within grid bounds
+        if (!isValidPosition(grid, row, col)) return;
+
+        const oldPos = pixelToGrid(selectedBlock.position.x, selectedBlock.position.y);
+
+        // Don't update if we're in the same cell
+        if (oldPos.row === row && oldPos.col === col) return;
+
+        // Check if target cell is empty
+        if (!grid[row][col].block) {
+            const newPosition = {
+                x: col * GRID_SIZE,
+                y: row * GRID_SIZE
+            };
+
+            const newGrid = [...grid];
+            newGrid[oldPos.row][oldPos.col].block = null;
+            const movedBlock = { ...selectedBlock, position: newPosition };
+            newGrid[row][col].block = movedBlock;
+            setGrid(newGrid);
+            onBlockMoved?.(selectedBlock.id, newPosition);
+            setSelectedBlock(movedBlock);
         }
     };
 
-    const handleTouchEnd = () => {
-        // Clear long press timer
-        if (longPressTimer.current) {
-            clearTimeout(longPressTimer.current);
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (selectedBlock) {
+            const { row, col } = pixelToGrid(selectedBlock.position.x, selectedBlock.position.y);
+
+            // If block doesn't have support, move it down until it does
+            if (!hasSupport(grid, row, col)) {
+                let newRow = row;
+                while (newRow < grid.length - 1 && !grid[newRow + 1][col].block) {
+                    newRow++;
+                }
+
+                const newPosition = {
+                    x: col * GRID_SIZE,
+                    y: newRow * GRID_SIZE
+                };
+
+                const newGrid = [...grid];
+                newGrid[row][col].block = null;
+                const movedBlock = { ...selectedBlock, position: newPosition };
+                newGrid[newRow][col].block = movedBlock;
+                setGrid(newGrid);
+                onBlockMoved?.(selectedBlock.id, newPosition);
+            }
         }
+
         setSelectedBlock(null);
         setIsDragging(false);
+        touchStartPos.current = null;
     };
 
     const removeBlock = (row: number, col: number) => {
@@ -157,7 +165,8 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
                         height: `${rows * GRID_SIZE}px`,
                         width: `${GRID_COLS * GRID_SIZE}px`,
                         maxWidth: '100%',
-                        maxHeight: 'calc(100vh - 120px)'
+                        maxHeight: 'calc(100vh - 120px)',
+                        touchAction: 'none'
                     }}
                 >
                     {/* Grid lines */}
@@ -177,15 +186,27 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
                         row.map((cell, colIndex) => cell.block && (
                             <div
                                 key={cell.block.id}
-                                className={`absolute touch-none transition-transform ${isDragging && selectedBlock?.id === cell.block.id ? 'scale-110' : ''}`}
+                                className={`absolute touch-none transition-transform ${isDragging && selectedBlock?.id === cell.block.id ? 'scale-110 z-10' : ''}`}
                                 style={{
                                     width: `${GRID_SIZE}px`,
                                     height: `${GRID_SIZE}px`,
                                     transform: `translate(${colIndex * GRID_SIZE}px, ${rowIndex * GRID_SIZE}px)`,
                                 }}
-                                onTouchStart={(e) => handleTouchStart(e, cell.block!)}
-                                onTouchMove={handleTouchMove}
-                                onTouchEnd={handleTouchEnd}
+                                onTouchStart={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    handleTouchStart(e, cell.block!);
+                                }}
+                                onTouchMove={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    handleTouchMove(e);
+                                }}
+                                onTouchEnd={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    handleTouchEnd(e);
+                                }}
                             >
                                 <div
                                     className="w-full h-full rounded-lg shadow-md"
