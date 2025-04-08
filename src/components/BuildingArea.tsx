@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
@@ -26,10 +27,10 @@ export const BuildingArea = ({
     onBlockMoved = () => { }
 }: BuildingAreaProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const engineRef = useRef<Engine>();
-    const worldRef = useRef<World>();
-    const mouseConstraintRef = useRef<MouseConstraint>();
-    const blockBodiesRef = useRef(new Map<string, Matter.Body>());
+    const engineRef = useRef<Engine | undefined>(undefined);
+    const worldRef = useRef<World | undefined>(undefined);
+    const mouseConstraintRef = useRef<MouseConstraint | undefined>(undefined);
+    const blockBodiesRef = useRef<Map<string, Matter.Body>>(new Map());
 
     const handleBlockDrag = useCallback((e: DragEvent) => {
         const body = e.source.body;
@@ -160,10 +161,10 @@ export const BuildingArea = ({
             Runner.stop(runner);
             World.clear(world, true);
             Engine.clear(engine);
+
+            // Clean up mouse by removing its reference
             if (mouse.element) {
-                const element = mouse.element as HTMLElement;
-                element.removeEventListener('wheel', mouse.mousewheel as any);
-                element.removeEventListener('DOMMouseScroll', mouse.mousewheel as any);
+                (mouse as any).element = null;
             }
         };
     }, [placedBlocks, handleBlockDrag, handleBlockDragEnd]);
