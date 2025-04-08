@@ -1,3 +1,5 @@
+'use client';
+
 import { BlockPattern } from '../types';
 
 interface BlockDisplayProps {
@@ -23,18 +25,18 @@ export default function BlockDisplay({ pattern, number }: BlockDisplayProps) {
     return (
         <div className="flex flex-col items-center gap-4">
             <h2 className="text-2xl font-bold">Number {number}</h2>
-            <div
-                className="grid gap-1"
+            <div className="inline-grid gap-1 p-4 bg-white rounded-lg shadow-md"
                 style={{
-                    gridTemplateColumns: `repeat(${maxX}, minmax(0, 1fr))`,
+                    gridTemplateColumns: `repeat(${maxX}, minmax(48px, 1fr))`,
+                    gridTemplateRows: `repeat(${maxY}, 48px)`,
                 }}
             >
                 {grid.map((row, y) =>
                     row.map((isBlock, x) => (
                         <div
                             key={`${x}-${y}`}
-                            className={`w-12 h-12 rounded ${isBlock
-                                    ? 'bg-blue-500 border-2 border-blue-700'
+                            className={`w-full h-full rounded transition-colors ${isBlock
+                                    ? 'bg-blue-500 border-2 border-blue-700 shadow-sm'
                                     : 'border border-dashed border-gray-300'
                                 }`}
                         />
