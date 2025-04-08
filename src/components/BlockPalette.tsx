@@ -1,7 +1,6 @@
 'use client';
 
 import { Block, BLOCK_COLORS, RAINBOW_COLORS } from '../types/block';
-import { useDrag } from 'react-dnd';
 import { TouchEvent } from 'react';
 
 interface BlockItemProps {
@@ -13,10 +12,10 @@ interface BlockItemProps {
 
 const BlockItem = ({ block, onTouchStart, onTouchMove, onTouchEnd }: BlockItemProps) => {
     if (block.value === 7) {
-        const stripeHeight = 48 / RAINBOW_COLORS.length;
+        const stripeHeight = 100 / RAINBOW_COLORS.length;
         return (
             <div
-                className="relative w-12 h-12 md:w-16 md:h-16 touch-none select-none rounded-lg shadow-md"
+                className="w-full h-full relative rounded-lg shadow-md touch-none select-none"
                 onTouchStart={(e) => onTouchStart(e, block)}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
@@ -27,8 +26,8 @@ const BlockItem = ({ block, onTouchStart, onTouchMove, onTouchEnd }: BlockItemPr
                         className="absolute w-full"
                         style={{
                             backgroundColor: color,
-                            height: `${stripeHeight}px`,
-                            top: `${index * stripeHeight}px`,
+                            height: `${stripeHeight}%`,
+                            top: `${index * stripeHeight}%`,
                         }}
                     />
                 ))}
@@ -41,7 +40,7 @@ const BlockItem = ({ block, onTouchStart, onTouchMove, onTouchEnd }: BlockItemPr
 
     return (
         <div
-            className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center text-white font-bold text-lg md:text-2xl touch-none select-none rounded-lg shadow-md"
+            className="w-full h-full flex items-center justify-center text-white font-bold text-lg md:text-2xl rounded-lg shadow-md touch-none select-none"
             style={{ backgroundColor: block.color }}
             onTouchStart={(e) => onTouchStart(e, block)}
             onTouchMove={onTouchMove}
@@ -53,10 +52,10 @@ const BlockItem = ({ block, onTouchStart, onTouchMove, onTouchEnd }: BlockItemPr
 };
 
 export const BlockPalette = () => {
-    const blocks: Block[] = BLOCK_COLORS.map((color, index) => ({
-        id: `palette-${index + 1}`,
-        value: index + 1,
-        color,
+    const blocks: Block[] = Array.from({ length: 10 }, (_, i) => ({
+        id: `palette-${i + 1}`,
+        value: i + 1,
+        color: BLOCK_COLORS[i],
     }));
 
     const handleTouchStart = (e: TouchEvent, block: Block) => {
@@ -71,6 +70,8 @@ export const BlockPalette = () => {
         ghost.style.position = 'fixed';
         ghost.style.left = `${touch.clientX - rect.width / 2}px`;
         ghost.style.top = `${touch.clientY - rect.height / 2}px`;
+        ghost.style.width = `${rect.width}px`;
+        ghost.style.height = `${rect.height}px`;
         ghost.style.opacity = '0.8';
         ghost.style.zIndex = '1000';
         ghost.style.pointerEvents = 'none';
@@ -100,18 +101,22 @@ export const BlockPalette = () => {
     };
 
     return (
-        <div className="p-2 w-full">
-            <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
-                {blocks.map((block) => (
-                    <BlockItem
-                        key={block.id}
-                        block={block}
-                        onTouchStart={handleTouchStart}
-                        onTouchMove={handleTouchMove}
-                        onTouchEnd={handleTouchEnd}
-                    />
-                ))}
+        <div className="fixed bottom-0 left-0 right-0 bg-white p-2 shadow-lg z-50">
+            <div className="flex overflow-x-auto pb-2 px-2 hide-scrollbar items-center">
+                <div className="flex gap-3 mx-auto px-2">
+                    {blocks.map((block) => (
+                        <div key={block.id} className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14">
+                            <BlockItem
+                                block={block}
+                                onTouchStart={handleTouchStart}
+                                onTouchMove={handleTouchMove}
+                                onTouchEnd={handleTouchEnd}
+                            />
+                        </div>
+                    ))}
+                </div>
             </div>
+            <div className="h-safe-area-bottom"></div>
         </div>
     );
 }; 

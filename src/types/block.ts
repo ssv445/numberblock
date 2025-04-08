@@ -21,25 +21,25 @@ export interface BlockHandlers {
 
 // Colors from Numberblocks 1-10
 export const BLOCK_COLORS = [
-    '#FF0000', // Red - 1
-    '#FFA500', // Orange - 2
-    '#FFFF00', // Yellow - 3
-    '#008000', // Green - 4
-    '#0000FF', // Blue - 5
+    '#FF4136', // Red - 1
+    '#FF851B', // Orange - 2
+    '#FFDC00', // Yellow - 3
+    '#2ECC40', // Green - 4
+    '#0074D9', // Blue - 5
     '#4B0082', // Indigo - 6
-    '#EE82EE', // Violet - 7
-    '#800080', // Purple - 8
-    '#FFC0CB', // Pink - 9
-    '#A52A2A', // Brown - 10
+    '#B10DC9', // Rainbow will be used instead - 7
+    '#85144b', // Purple - 8
+    '#FFB6C1', // Pink - 9
+    '#8B4513'  // Brown - 10
 ] as const;
 
 // Rainbow colors for number 7
 export const RAINBOW_COLORS = [
     '#FF0000', // Red
-    '#FFA500', // Orange
+    '#FF7F00', // Orange
     '#FFFF00', // Yellow
-    '#008000', // Green
+    '#00FF00', // Green
     '#0000FF', // Blue
     '#4B0082', // Indigo
-    '#EE82EE', // Violet
+    '#8F00FF'  // Violet
 ]; 
