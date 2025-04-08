@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Touch-related styles */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+#ghost-block {
+  will-change: transform;
+  pointer-events: none;
+  touch-action: none;
+  transition: transform 0.1s ease-out;
+}
