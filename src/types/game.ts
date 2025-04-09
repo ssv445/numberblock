@@ -18,9 +18,12 @@ export type GameState = {
     selectedBlock: Block | null;
     placedBlocks: number;
     grid: GridState;
+    maxRow: number;
+    maxCol: number;
 };
 
-export const GRID_SIZE = 10;
+export const INITIAL_GRID_SIZE = 5;
+export const MIN_GRID_SIZE = 5;
 
 export const COLORS = [
     '#FF0000', // Red
