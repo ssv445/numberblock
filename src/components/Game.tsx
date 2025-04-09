@@ -281,7 +281,7 @@ export const Game = () => {
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="font-medium text-blue-500">4.</span>
-                                <span>To move a block, click on it to pick it up, then click an empty cell to place it.</span>
+                                <span>To remove a block, simply click on it in the grid. The block counter will decrease.</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="font-medium text-blue-500">5.</span>
