@@ -31,6 +31,30 @@ const config: Config = {
                     10: '#ef4444', // red-500
                 },
             },
+            animation: {
+                'rainbow-glow': 'rainbow-glow 3s linear infinite',
+                'rainbow-border': 'rainbow-border 3s linear infinite',
+            },
+            keyframes: {
+                'rainbow-glow': {
+                    '0%': { boxShadow: '0 0 10px rgba(255, 0, 0, 0.5)' },
+                    '17%': { boxShadow: '0 0 10px rgba(255, 165, 0, 0.5)' },
+                    '33%': { boxShadow: '0 0 10px rgba(255, 255, 0, 0.5)' },
+                    '50%': { boxShadow: '0 0 10px rgba(0, 255, 0, 0.5)' },
+                    '67%': { boxShadow: '0 0 10px rgba(0, 0, 255, 0.5)' },
+                    '83%': { boxShadow: '0 0 10px rgba(238, 130, 238, 0.5)' },
+                    '100%': { boxShadow: '0 0 10px rgba(255, 0, 0, 0.5)' },
+                },
+                'rainbow-border': {
+                    '0%': { borderColor: '#ff0000' },
+                    '17%': { borderColor: '#ffa500' },
+                    '33%': { borderColor: '#ffff00' },
+                    '50%': { borderColor: '#00ff00' },
+                    '67%': { borderColor: '#0000ff' },
+                    '83%': { borderColor: '#ee82ee' },
+                    '100%': { borderColor: '#ff0000' },
+                },
+            },
         },
     },
     safelist: [

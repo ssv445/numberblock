@@ -23,20 +23,24 @@ export const BlockSelector = ({ selectedBlock, onBlockSelect }: BlockSelectorPro
                         key={block.id}
                         onClick={() => onBlockSelect(block)}
                         className={`
-                            w-10 h-10 
-                            rounded-sm 
-                            cursor-pointer 
+                            relative w-10 h-10 
+                            rounded-sm cursor-pointer 
                             transition-all duration-200 
                             transform hover:scale-105
                             shadow-sm
-                            border-2
-                            ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''}
+                            ${isSelected ? 'scale-105 animate-rainbow-glow' : ''}
                         `}
                         style={{
                             backgroundColor: color,
-                            borderColor: 'rgba(0,0,0,0.2)'
+                            border: isSelected
+                                ? '2px solid transparent'
+                                : '2px solid rgba(0,0,0,0.2)'
                         }}
-                    />
+                    >
+                        {isSelected && (
+                            <div className="absolute inset-[-2px] rounded-sm pointer-events-none animate-rainbow-border" />
+                        )}
+                    </div>
                 );
             })}
         </div>

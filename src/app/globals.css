@@ -61,3 +61,60 @@ body {
 .h-safe-area-bottom {
   height: env(safe-area-inset-bottom);
 }
+
+@keyframes rainbow-glow {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  }
+  17% {
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
+  }
+  33% {
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+  }
+  67% {
+    box-shadow: 0 0 10px rgba(0, 0, 255, 0.5);
+  }
+  83% {
+    box-shadow: 0 0 10px rgba(238, 130, 238, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  }
+}
+
+@keyframes rainbow-border {
+  0% {
+    border-color: #ff0000;
+  }
+  17% {
+    border-color: #ffa500;
+  }
+  33% {
+    border-color: #ffff00;
+  }
+  50% {
+    border-color: #00ff00;
+  }
+  67% {
+    border-color: #0000ff;
+  }
+  83% {
+    border-color: #ee82ee;
+  }
+  100% {
+    border-color: #ff0000;
+  }
+}
+
+.animate-rainbow-glow {
+  animation: rainbow-glow 3s linear infinite;
+}
+
+.animate-rainbow-border {
+  border: 2px solid transparent;
+  animation: rainbow-border 3s linear infinite;
+}

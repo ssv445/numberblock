@@ -209,7 +209,7 @@ export const Game = () => {
     return (
         <div className="flex flex-col items-center gap-4 p-4">
             <div className="relative w-full flex items-center justify-between mb-2">
-                <h1 className="text-2xl font-bold text-gray-800">Number Blocks</h1>
+                <h1 className="text-2xl font-bold text-gray-800">NumberBlocks Game</h1>
                 <div className="flex items-center gap-4">
                     <div
                         className="flex items-center justify-center w-12 h-12 rounded-full text-2xl font-bold text-white transition-colors duration-200"
