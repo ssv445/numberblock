@@ -1,28 +1,40 @@
 'use client';
 
-import { Block, BLOCK_COLORS } from '@/types/block';
+import { Block, COLORS } from '@/types/game';
 
-interface BlockSelectorProps {
+type BlockSelectorProps = {
+    selectedBlock: Block | null;
     onBlockSelect: (block: Block) => void;
-}
+};
 
-export const BlockSelector = ({ onBlockSelect }: BlockSelectorProps) => {
+export const BlockSelector = ({ selectedBlock, onBlockSelect }: BlockSelectorProps) => {
     return (
-        <div className="flex flex-col gap-2 p-2 bg-white rounded-lg shadow-lg">
-            <div className="grid grid-cols-3 gap-2">
-                {BLOCK_COLORS.map((color, index) => (
-                    <button
-                        key={index}
-                        className="w-12 h-12 rounded-lg shadow-md transition-transform hover:scale-105 active:scale-95"
-                        style={{ backgroundColor: color }}
-                        onClick={() => onBlockSelect({
-                            id: `selector-${index + 1}`,
-                            value: index + 1,
-                            color: color
-                        })}
+        <div className="flex flex-wrap gap-1 p-2 bg-gray-100 rounded-lg max-w-[600px]">
+            {COLORS.map((color) => {
+                const block: Block = { id: color, color };
+                const isSelected = selectedBlock?.id === block.id;
+
+                return (
+                    <div
+                        key={block.id}
+                        onClick={() => onBlockSelect(block)}
+                        className={`
+                            w-10 h-10 
+                            rounded-sm 
+                            cursor-pointer 
+                            transition-all duration-200 
+                            transform hover:scale-105
+                            shadow-sm
+                            border
+                            ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''}
+                        `}
+                        style={{
+                            backgroundColor: block.color,
+                            borderColor: 'rgba(0,0,0,0.2)'
+                        }}
                     />
-                ))}
-            </div>
+                );
+            })}
         </div>
     );
 }; 
