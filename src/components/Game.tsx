@@ -63,18 +63,71 @@ export const Game = () => {
 
     const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
         setGameState(prev => {
-            const originalGrid = prev.grid;
-            const cellInOriginalGrid = originalGrid[rowIndex]?.[colIndex];
+            const grid = prev.grid;
+            const cell = grid[rowIndex]?.[colIndex];
 
-            if (cellInOriginalGrid?.block && !prev.selectedBlock) {
-                const newGrid = [...originalGrid.map(row => [...row])];
-                const pickedBlock = {
-                    ...cellInOriginalGrid.block,
-                    id: cellInOriginalGrid.block.id,
-                    originalPosition: { row: rowIndex, col: colIndex }
+            // Case 1: Placing a selected block
+            if (prev.selectedBlock) {
+                if (cell?.block) {
+                    showToast("Can't place block on an occupied cell!");
+                    return prev; // Cancel action, keep block selected
+                }
+
+                // Expand grid if necessary
+                const finalMaxRow = Math.max(prev.maxRow, rowIndex);
+                const finalMaxCol = Math.max(prev.maxCol, colIndex);
+                const finalGridRows = Math.max(finalMaxRow + 1, MIN_GRID_SIZE);
+                const finalGridCols = Math.max(finalMaxCol + 1, MIN_GRID_SIZE);
+
+                const newGrid = [...grid.map(row => [...row])];
+                const currentRows = newGrid.length;
+                const currentCol = currentRows > 0 ? newGrid[0].length : 0;
+
+                // Add columns if needed
+                if (currentCol < finalGridCols) {
+                    const colsToAdd = finalGridCols - currentCol;
+                    for (let r = 0; r < currentRows; r++) {
+                        for (let i = 0; i < colsToAdd; i++) {
+                            newGrid[r].push({ id: uuidv4(), block: null });
+                        }
+                    }
+                }
+
+                // Add rows if needed
+                if (currentRows < finalGridRows) {
+                    const rowsToAdd = finalGridRows - currentRows;
+                    for (let i = 0; i < rowsToAdd; i++) {
+                        // Ensure new rows have the correct width (finalGridCols)
+                        const newRow = Array(finalGridCols).fill(null).map(() => ({ id: uuidv4(), block: null }));
+                        newGrid.push(newRow);
+                    }
+                }
+
+                // Place the block
+                const targetCellId = newGrid[rowIndex]?.[colIndex]?.id || uuidv4();
+                newGrid[rowIndex][colIndex] = {
+                    id: targetCellId,
+                    block: { ...prev.selectedBlock }
                 };
-                newGrid[rowIndex][colIndex].block = null;
 
+                setCounterColor(getRandomColor()); // Change counter color
+
+                return {
+                    ...prev,
+                    selectedBlock: null, // Clear selected block
+                    grid: newGrid,
+                    placedBlocks: prev.placedBlocks + 1, // Increment counter
+                    maxRow: finalMaxRow,
+                    maxCol: finalMaxCol
+                };
+            }
+
+            // Case 2: Removing a block (no block selected)
+            if (!prev.selectedBlock && cell?.block) {
+                const newGrid = [...grid.map(row => [...row])];
+                newGrid[rowIndex][colIndex].block = null; // Remove block
+
+                // Recalculate maxRow and maxCol after removal
                 let currentMaxRow = -1;
                 let currentMaxCol = -1;
                 for (let r = 0; r < newGrid.length; r++) {
@@ -86,125 +139,58 @@ export const Game = () => {
                     }
                 }
 
-                setCounterColor(getRandomColor());
+                setCounterColor(getRandomColor()); // Change counter color (optional on removal)
+
                 return {
                     ...prev,
-                    selectedBlock: pickedBlock,
                     grid: newGrid,
-                    placedBlocks: prev.placedBlocks - 1,
+                    placedBlocks: prev.placedBlocks - 1, // Decrement counter
                     maxRow: currentMaxRow,
                     maxCol: currentMaxCol
                 };
             }
 
-            if (prev.selectedBlock) {
-                console.log('Attempting Placement:', {
-                    rowIndex,
-                    colIndex,
-                    selectedBlockId: prev.selectedBlock.id,
-                    selectedBlockColor: prev.selectedBlock.color,
-                    originalGridDimensions: [originalGrid.length, originalGrid[0]?.length || 0],
-                    cellInOriginalGrid_exists: !!cellInOriginalGrid,
-                    cellInOriginalGrid_block_exists: !!cellInOriginalGrid?.block,
-                    cellInOriginalGrid_block_details: JSON.stringify(cellInOriginalGrid?.block)
-                });
-
-                if (cellInOriginalGrid?.block) {
-                    console.error('Occupied Cell Check FAILED:', { cellBlock: JSON.stringify(cellInOriginalGrid.block) });
-                    showToast("Can't place block on an occupied cell!");
-                    return prev;
-                }
-
-                const finalMaxRow = Math.max(prev.maxRow, rowIndex);
-                const finalMaxCol = Math.max(prev.maxCol, colIndex);
-
-                const finalGridRows = Math.max(finalMaxRow + 1, MIN_GRID_SIZE);
-                const finalGridCols = Math.max(finalMaxCol + 1, MIN_GRID_SIZE);
-
-                const newGrid = [...prev.grid.map(row => [...row])];
-                const currentRows = newGrid.length;
-                const currentCol = currentRows > 0 ? newGrid[0].length : 0;
-
-                if (currentCol < finalGridCols) {
-                    const colsToAdd = finalGridCols - currentCol;
-                    for (let r = 0; r < currentRows; r++) {
-                        for (let i = 0; i < colsToAdd; i++) {
-                            newGrid[r].push({ id: uuidv4(), block: null });
-                        }
-                    }
-                }
-
-                if (currentRows < finalGridRows) {
-                    const rowsToAdd = finalGridRows - currentRows;
-                    for (let i = 0; i < rowsToAdd; i++) {
-                        const newRow = Array(currentCol).fill(null).map(() => ({ id: uuidv4(), block: null }));
-                        newGrid.push(newRow);
-                    }
-                }
-
-                const targetCellId = newGrid[rowIndex]?.[colIndex]?.id || uuidv4();
-                newGrid[rowIndex][colIndex] = {
-                    id: targetCellId,
-                    block: { ...prev.selectedBlock, originalPosition: undefined }
-                };
-
-                if (prev.selectedBlock.originalPosition) {
-                    const { row, col } = prev.selectedBlock.originalPosition;
-                    if (row < newGrid.length && col < newGrid[row]?.length) {
-                        newGrid[row][col].block = null;
-                    } else {
-                        console.warn("Original position cell not found after padding", { row, col, finalGridRows, finalGridCols, gridDimensions: [newGrid.length, newGrid[0]?.length] });
-                    }
-                }
-
-                setCounterColor(getRandomColor());
-                return {
-                    ...prev,
-                    selectedBlock: null,
-                    grid: newGrid,
-                    placedBlocks: prev.placedBlocks + (prev.selectedBlock.originalPosition ? 0 : 1),
-                    maxRow: finalMaxRow,
-                    maxCol: finalMaxCol
-                };
-            }
-
+            // Case 3: Clicking empty cell with no block selected (do nothing)
+            // Case 4: Clicking outside grid bounds (shouldn't happen with current setup)
             return prev;
         });
     }, [showToast]);
 
     const handleSave = useCallback(() => {
+        const rowsToRender = Math.max(gameState.maxRow + 1, MIN_GRID_SIZE);
+        const colsToRender = Math.max(gameState.maxCol + 1, MIN_GRID_SIZE);
+
         const canvas = document.createElement('canvas');
         const cellSize = 40;
         const padding = 20;
-        const gridRows = gameState.grid.length;
-        const gridCols = gridRows > 0 ? gameState.grid[0].length : 0;
-        canvas.width = gridCols * cellSize + 2 * padding;
-        canvas.height = gridRows * cellSize + 2 * padding;
+        canvas.width = colsToRender * cellSize + 2 * padding;
+        canvas.height = rowsToRender * cellSize + 2 * padding;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        ctx.fillStyle = '#f3f4f6';
+        ctx.fillStyle = '#f3f4f6'; // Background color for padding
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        gameState.grid.forEach((row, rowIndex) => {
-            row.forEach((cell, colIndex) => {
+        for (let rowIndex = 0; rowIndex < rowsToRender; rowIndex++) {
+            for (let colIndex = 0; colIndex < colsToRender; colIndex++) {
+                const cell = gameState.grid[rowIndex]?.[colIndex];
                 const x = colIndex * cellSize + padding;
                 const y = rowIndex * cellSize + padding;
 
-                ctx.fillStyle = cell.block?.color || '#FFFFFF';
+                ctx.fillStyle = cell?.block?.color || '#FFFFFF'; // White for empty cells
                 ctx.fillRect(x, y, cellSize, cellSize);
 
-                ctx.strokeStyle = cell.block ? 'rgba(0,0,0,0.2)' : '#e5e7eb';
-                ctx.lineWidth = cell.block ? 2 : 1;
+                ctx.strokeStyle = cell?.block ? 'rgba(0,0,0,0.2)' : '#e5e7eb'; // Grid lines
+                ctx.lineWidth = cell?.block ? 2 : 1;
                 ctx.strokeRect(x, y, cellSize, cellSize);
-            });
-        });
+            }
+        }
 
         const link = document.createElement('a');
         link.download = 'number-blocks.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
-    }, [gameState.grid]);
+    }, [gameState.grid, gameState.maxRow, gameState.maxCol]);
 
     return (
         <div className="flex flex-col items-center gap-4 p-4">
@@ -246,7 +232,7 @@ export const Game = () => {
             <p className="text-gray-500 text-sm italic mb-4">
                 {gameState.selectedBlock
                     ? "Click any empty cell to place the block"
-                    : "Select a color block from below to start"
+                    : "Select a color block from below"
                 }
             </p>
 

@@ -1,10 +1,6 @@
 export type Block = {
     id: string;
     color: string;
-    originalPosition?: {
-        row: number;
-        col: number;
-    };
 };
 
 export type Cell = {

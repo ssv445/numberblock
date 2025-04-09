@@ -50,7 +50,7 @@ export const Grid = ({ grid, onCellClick, selectedBlock, maxRow, maxCol }: GridP
                                         ${isSelected ? 'animate-rainbow-glow' : ''}
                                     `}
                                     style={{
-                                        backgroundColor: cell.block?.color ?? 'white',
+                                        backgroundColor: cell?.block?.color ?? 'white',
                                         border: isSelected
                                             ? '2px solid transparent'
                                             : hasBlock
