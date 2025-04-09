@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Grid } from './Grid';
 import { BlockSelector } from './BlockSelector';
-import { Block, Cell, GameState, INITIAL_GRID_SIZE, MIN_GRID_SIZE } from '@/types/game';
+import { Block, Cell, GameState, INITIAL_GRID_SIZE, MIN_GRID_SIZE, COLORS } from '@/types/game';
 import { v4 as uuidv4 } from 'uuid';
 
 const createEmptyGrid = (size: number): Cell[][] => {
@@ -32,6 +32,8 @@ export const Game = () => {
         visible: false
     });
 
+    const [counterColor, setCounterColor] = useState(COLORS[0]);
+
     useEffect(() => {
         if (toast.visible) {
             const timer = setTimeout(() => {
@@ -51,6 +53,11 @@ export const Game = () => {
             selectedBlock: { ...block, id: uuidv4() }
         }));
     }, []);
+
+    const getRandomColor = () => {
+        const randomIndex = Math.floor(Math.random() * COLORS.length);
+        return COLORS[randomIndex];
+    };
 
     const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
         setGameState(prev => {
@@ -77,6 +84,7 @@ export const Game = () => {
                     }
                 }
 
+                setCounterColor(getRandomColor());
                 return {
                     ...prev,
                     selectedBlock: pickedBlock,
@@ -147,6 +155,7 @@ export const Game = () => {
                     }
                 }
 
+                setCounterColor(getRandomColor());
                 return {
                     ...prev,
                     selectedBlock: null,
@@ -197,9 +206,31 @@ export const Game = () => {
 
     return (
         <div className="flex flex-col items-center gap-4 p-4">
-            <div className="flex flex-col items-center gap-2">
+            <div className="relative w-full flex items-center justify-between mb-2">
                 <h1 className="text-2xl font-bold text-gray-800">Number Blocks</h1>
-                <p className="text-sm text-gray-600">Blocks placed: {gameState.placedBlocks}</p>
+                <div className="flex items-center gap-4">
+                    <div
+                        className="flex items-center justify-center w-12 h-12 rounded-full text-2xl font-bold text-white transition-colors duration-200"
+                        style={{
+                            backgroundColor: counterColor,
+                            border: '2px solid rgba(0,0,0,0.2)'
+                        }}
+                    >
+                        {gameState.placedBlocks}
+                    </div>
+                    <button
+                        onClick={handleSave}
+                        disabled={gameState.placedBlocks === 0}
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        title="Save as Image"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <Grid
@@ -215,14 +246,6 @@ export const Game = () => {
                     selectedBlock={gameState.selectedBlock}
                     onBlockSelect={handleBlockSelect}
                 />
-
-                <button
-                    onClick={handleSave}
-                    className="px-4 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                    disabled={gameState.placedBlocks === 0}
-                >
-                    Save as Image
-                </button>
             </div>
 
             {toast.visible && (
