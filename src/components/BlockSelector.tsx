@@ -16,7 +16,7 @@ export const BlockSelector = ({ selectedBlock, onBlockSelect }: BlockSelectorPro
                     id: uuidv4(),
                     color
                 };
-                const isSelected = selectedBlock?.color === color && !selectedBlock?.originalPosition;
+                const isSelected = selectedBlock?.color === color;
 
                 return (
                     <div
