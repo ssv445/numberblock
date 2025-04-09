@@ -230,8 +230,8 @@ export const BuildingGrid = ({ onBlockMoved, onBlockRemoved }: BuildingGridProps
                                     handleTouchStart(e, cell.block!);
                                 }}
                                 onTouchMove={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
+                                    // e.stopPropagation();
+                                    // e.preventDefault();
                                     handleTouchMove(e);
                                 }}
                                 onTouchEnd={(e) => {
