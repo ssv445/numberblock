@@ -34,6 +34,8 @@ export const Game = () => {
 
     const [counterColor, setCounterColor] = useState(COLORS[0]);
 
+    const [showInstructions, setShowInstructions] = useState(false);
+
     useEffect(() => {
         if (toast.visible) {
             const timer = setTimeout(() => {
@@ -241,11 +243,70 @@ export const Game = () => {
                 maxCol={gameState.maxCol}
             />
 
-            <div className="flex flex-col items-center gap-2 mt-4">
+            <p className="text-gray-500 text-sm italic mb-4">
+                {gameState.selectedBlock
+                    ? "Click any empty cell to place the block"
+                    : "Select a color block from below to start"
+                }
+            </p>
+
+            <div className="flex flex-col items-center gap-4 w-full max-w-md">
                 <BlockSelector
                     selectedBlock={gameState.selectedBlock}
                     onBlockSelect={handleBlockSelect}
                 />
+
+                <button
+                    onClick={() => setShowInstructions(prev => !prev)}
+                    className="text-blue-500 hover:text-blue-600 text-sm font-medium flex items-center gap-1"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`transform transition-transform duration-200 ${showInstructions ? 'rotate-180' : ''}`}
+                    >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                    How to Play
+                </button>
+
+                {showInstructions && (
+                    <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 w-full">
+                        <h3 className="font-bold text-gray-800 mb-2">How to Play Number Blocks</h3>
+                        <ul className="space-y-2">
+                            <li className="flex items-start gap-2">
+                                <span className="font-medium text-blue-500">1.</span>
+                                <span>Select a colored block from the palette below the grid.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="font-medium text-blue-500">2.</span>
+                                <span>Click any empty cell in the grid to place the selected block.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="font-medium text-blue-500">3.</span>
+                                <span>The grid will automatically expand when you place blocks near the edges.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="font-medium text-blue-500">4.</span>
+                                <span>To move a block, click on it to pick it up, then click an empty cell to place it.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="font-medium text-blue-500">5.</span>
+                                <span>Use the save button (↓) in the top-right to save your creation as an image.</span>
+                            </li>
+                        </ul>
+                        <p className="mt-3 text-xs text-gray-500 italic">
+                            Tip: The counter in the top-right shows how many blocks you've placed and changes color with each placement!
+                        </p>
+                    </div>
+                )}
             </div>
 
             {toast.visible && (
