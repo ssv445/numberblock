@@ -25,7 +25,10 @@ export const Game = () => {
     const handleBlockSelect = useCallback((block: Block) => {
         setGameState(prev => ({
             ...prev,
-            selectedBlock: { ...block }
+            selectedBlock: {
+                ...block,
+                id: uuidv4() // Generate a new unique ID when selecting from palette
+            }
         }));
     }, []);
 
@@ -41,6 +44,11 @@ export const Game = () => {
             // If we have a selected block and the cell is empty, place the block
             if (prev.selectedBlock && !targetCell.block) {
                 targetCell.block = { ...prev.selectedBlock };
+                // Find and remove the original block if it was picked from the grid
+                if (prev.selectedBlock.originalPosition) {
+                    const { row, col } = prev.selectedBlock.originalPosition;
+                    newGrid[row][col].block = null;
+                }
                 return {
                     ...prev,
                     selectedBlock: null,
@@ -51,12 +59,14 @@ export const Game = () => {
 
             // If the cell has a block and no block is selected, pick it up
             if (targetCell.block && !prev.selectedBlock) {
-                const pickedBlock = { ...targetCell.block };
-                targetCell.block = null;
+                const pickedBlock = {
+                    ...targetCell.block,
+                    id: targetCell.block.id, // Keep the same ID when picking up
+                    originalPosition: { row: rowIndex, col: colIndex }
+                };
                 return {
                     ...prev,
                     selectedBlock: pickedBlock,
-                    placedBlocks: prev.placedBlocks - 1,
                     grid: newGrid
                 };
             }
@@ -111,7 +121,11 @@ export const Game = () => {
                 <p className="text-sm text-gray-600">Blocks placed: {gameState.placedBlocks}</p>
             </div>
 
-            <Grid grid={gameState.grid} onCellClick={handleCellClick} />
+            <Grid
+                grid={gameState.grid}
+                onCellClick={handleCellClick}
+                selectedBlock={gameState.selectedBlock}
+            />
 
             <div className="flex flex-col items-center gap-2">
                 <BlockSelector

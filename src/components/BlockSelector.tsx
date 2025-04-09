@@ -1,6 +1,7 @@
 'use client';
 
 import { Block, COLORS } from '@/types/game';
+import { v4 as uuidv4 } from 'uuid';
 
 type BlockSelectorProps = {
     selectedBlock: Block | null;
@@ -11,8 +12,11 @@ export const BlockSelector = ({ selectedBlock, onBlockSelect }: BlockSelectorPro
     return (
         <div className="flex flex-wrap gap-1 p-2 bg-gray-100 rounded-lg max-w-[600px]">
             {COLORS.map((color) => {
-                const block: Block = { id: color, color };
-                const isSelected = selectedBlock?.id === block.id;
+                const block: Block = {
+                    id: uuidv4(),
+                    color
+                };
+                const isSelected = selectedBlock?.color === color;
 
                 return (
                     <div
