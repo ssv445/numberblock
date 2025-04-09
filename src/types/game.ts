@@ -26,14 +26,14 @@ export const INITIAL_GRID_SIZE = 5;
 export const MIN_GRID_SIZE = 5;
 
 export const COLORS = [
-    '#e41a1d', // Red
-    '#f3942b', // Green
-    '#e0ce15', // Blue
-    '#4fce31', // Yellow
-    '#46acca', // Magenta
-    '#5729c2', // Cyan
-    '#0f0f0f', // Orange
-    '#eb27a1', // Purple
-    '#a7aaac', // Dark Green
-    '#f0f0f0', // Pink
+    '#e41a1d', // number 1
+    '#f3942b', // number 2
+    '#e0ce15', // number 3
+    '#4fce31', // number 4
+    '#46acca', // number 5
+    '#5729c2', // number 6
+    '#0f0f0f', // number 7
+    '#eb27a1', // number 8
+    '#a7aaac', // number 9
+    '#f0f0f0', // number 10
 ]; 
