@@ -62,16 +62,46 @@ export const Game = () => {
     };
 
     const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
-        setGameState(prev => {
-            const grid = prev.grid;
-            const cell = grid[rowIndex]?.[colIndex];
+        const cell = gameState.grid[rowIndex]?.[colIndex]; // Read current cell state directly
 
-            // Case 1: Placing a selected block
-            if (prev.selectedBlock) {
-                if (cell?.block) {
-                    showToast("Can't place block on an occupied cell!");
-                    return prev; // Cancel action, keep block selected
+        // Determine action based on cell state first
+        if (cell?.block) {
+            // Action: Remove block
+            setGameState(prev => {
+                const grid = prev.grid;
+                const newGrid = [...grid.map(row => [...row])];
+                newGrid[rowIndex][colIndex].block = null; // Remove block
+
+                // Recalculate maxRow and maxCol after removal
+                let currentMaxRow = -1;
+                let currentMaxCol = -1;
+                for (let r = 0; r < newGrid.length; r++) {
+                    for (let c = 0; c < newGrid[r].length; c++) {
+                        if (newGrid[r][c].block) {
+                            currentMaxRow = Math.max(currentMaxRow, r);
+                            currentMaxCol = Math.max(currentMaxCol, c);
+                        }
+                    }
                 }
+
+                return {
+                    ...prev,
+                    selectedBlock: null, // Also clear selected block from palette if any was held
+                    grid: newGrid,
+                    placedBlocks: prev.placedBlocks - 1, // Decrement counter
+                    maxRow: currentMaxRow,
+                    maxCol: currentMaxCol
+                };
+            });
+            setCounterColor(getRandomColor()); // Call this *after* initiating the game state update
+
+        } else if (gameState.selectedBlock) {
+            // Action: Place block (only if a block is selected)
+            const blockToPlace = gameState.selectedBlock; // Capture the non-null block here
+            setGameState(prev => {
+                // No need to re-read grid/cell, already know it's empty and selectedBlock exists
+                const grid = prev.grid;
+                const newGrid = [...grid.map(row => [...row])];
 
                 // Expand grid if necessary
                 const finalMaxRow = Math.max(prev.maxRow, rowIndex);
@@ -79,7 +109,6 @@ export const Game = () => {
                 const finalGridRows = Math.max(finalMaxRow + 1, MIN_GRID_SIZE);
                 const finalGridCols = Math.max(finalMaxCol + 1, MIN_GRID_SIZE);
 
-                const newGrid = [...grid.map(row => [...row])];
                 const currentRows = newGrid.length;
                 const currentCol = currentRows > 0 ? newGrid[0].length : 0;
 
@@ -97,7 +126,6 @@ export const Game = () => {
                 if (currentRows < finalGridRows) {
                     const rowsToAdd = finalGridRows - currentRows;
                     for (let i = 0; i < rowsToAdd; i++) {
-                        // Ensure new rows have the correct width (finalGridCols)
                         const newRow = Array(finalGridCols).fill(null).map(() => ({ id: uuidv4(), block: null }));
                         newGrid.push(newRow);
                     }
@@ -107,10 +135,11 @@ export const Game = () => {
                 const targetCellId = newGrid[rowIndex]?.[colIndex]?.id || uuidv4();
                 newGrid[rowIndex][colIndex] = {
                     id: targetCellId,
-                    block: { ...prev.selectedBlock }
+                    block: {
+                        id: blockToPlace.id,
+                        color: blockToPlace.color
+                    }
                 };
-
-                setCounterColor(getRandomColor()); // Change counter color
 
                 return {
                     ...prev,
@@ -120,41 +149,12 @@ export const Game = () => {
                     maxRow: finalMaxRow,
                     maxCol: finalMaxCol
                 };
-            }
+            });
+            setCounterColor(getRandomColor()); // Call this *after* initiating the game state update
+        }
+        // Else: Clicked empty cell with no block selected - do nothing
 
-            // Case 2: Removing a block (no block selected)
-            if (!prev.selectedBlock && cell?.block) {
-                const newGrid = [...grid.map(row => [...row])];
-                newGrid[rowIndex][colIndex].block = null; // Remove block
-
-                // Recalculate maxRow and maxCol after removal
-                let currentMaxRow = -1;
-                let currentMaxCol = -1;
-                for (let r = 0; r < newGrid.length; r++) {
-                    for (let c = 0; c < newGrid[r].length; c++) {
-                        if (newGrid[r][c].block) {
-                            currentMaxRow = Math.max(currentMaxRow, r);
-                            currentMaxCol = Math.max(currentMaxCol, c);
-                        }
-                    }
-                }
-
-                setCounterColor(getRandomColor()); // Change counter color (optional on removal)
-
-                return {
-                    ...prev,
-                    grid: newGrid,
-                    placedBlocks: prev.placedBlocks - 1, // Decrement counter
-                    maxRow: currentMaxRow,
-                    maxCol: currentMaxCol
-                };
-            }
-
-            // Case 3: Clicking empty cell with no block selected (do nothing)
-            // Case 4: Clicking outside grid bounds (shouldn't happen with current setup)
-            return prev;
-        });
-    }, [showToast]);
+    }, [gameState.grid, gameState.selectedBlock]); // Add dependencies used outside setGameState
 
     const handleSave = useCallback(() => {
         const rowsToRender = Math.max(gameState.maxRow + 1, MIN_GRID_SIZE);
