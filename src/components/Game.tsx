@@ -58,7 +58,7 @@ export const Game = () => {
             const cellInOriginalGrid = originalGrid[rowIndex]?.[colIndex];
 
             if (cellInOriginalGrid?.block && !prev.selectedBlock) {
-                let newGrid = [...originalGrid.map(row => [...row])];
+                const newGrid = [...originalGrid.map(row => [...row])];
                 const pickedBlock = {
                     ...cellInOriginalGrid.block,
                     id: cellInOriginalGrid.block.id,
@@ -111,9 +111,9 @@ export const Game = () => {
                 const finalGridRows = Math.max(finalMaxRow + 1, MIN_GRID_SIZE);
                 const finalGridCols = Math.max(finalMaxCol + 1, MIN_GRID_SIZE);
 
-                let newGrid = [...prev.grid.map(row => [...row])];
-                let currentRows = newGrid.length;
-                let currentCol = currentRows > 0 ? newGrid[0].length : 0;
+                const newGrid = [...prev.grid.map(row => [...row])];
+                const currentRows = newGrid.length;
+                const currentCol = currentRows > 0 ? newGrid[0].length : 0;
 
                 if (currentCol < finalGridCols) {
                     const colsToAdd = finalGridCols - currentCol;
@@ -122,7 +122,6 @@ export const Game = () => {
                             newGrid[r].push({ id: uuidv4(), block: null });
                         }
                     }
-                    currentCol = finalGridCols;
                 }
 
                 if (currentRows < finalGridRows) {
