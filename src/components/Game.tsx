@@ -31,11 +31,26 @@ export const Game = () => {
 
     const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
         setGameState(prev => {
-            const newGrid = [...prev.grid.map(row => [...row])];
+            // Create a deep copy of the grid
+            const newGrid = prev.grid.map(row => row.map(cell => ({
+                ...cell,
+                block: cell.block ? { ...cell.block } : null
+            })));
             const targetCell = newGrid[rowIndex][colIndex];
 
-            // If cell has a block, pick it up
-            if (targetCell.block) {
+            // If we have a selected block and the cell is empty, place the block
+            if (prev.selectedBlock && !targetCell.block) {
+                targetCell.block = { ...prev.selectedBlock };
+                return {
+                    ...prev,
+                    selectedBlock: null,
+                    placedBlocks: prev.placedBlocks + 1,
+                    grid: newGrid
+                };
+            }
+
+            // If the cell has a block and no block is selected, pick it up
+            if (targetCell.block && !prev.selectedBlock) {
                 const pickedBlock = { ...targetCell.block };
                 targetCell.block = null;
                 return {
@@ -46,13 +61,13 @@ export const Game = () => {
                 };
             }
 
-            // If we have a selected block, place it
-            if (prev.selectedBlock) {
+            // If we have both a selected block and a block in the cell, swap them
+            if (prev.selectedBlock && targetCell.block) {
+                const cellBlock = { ...targetCell.block };
                 targetCell.block = { ...prev.selectedBlock };
                 return {
                     ...prev,
-                    selectedBlock: null,
-                    placedBlocks: prev.placedBlocks + 1,
+                    selectedBlock: cellBlock,
                     grid: newGrid
                 };
             }

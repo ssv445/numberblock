@@ -25,11 +25,11 @@ export const BlockSelector = ({ selectedBlock, onBlockSelect }: BlockSelectorPro
                             transition-all duration-200 
                             transform hover:scale-105
                             shadow-sm
-                            border
+                            border-2
                             ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''}
                         `}
                         style={{
-                            backgroundColor: block.color,
+                            backgroundColor: color,
                             borderColor: 'rgba(0,0,0,0.2)'
                         }}
                     />
