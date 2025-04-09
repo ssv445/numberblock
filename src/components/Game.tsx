@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Grid } from './Grid';
 import { BlockSelector } from './BlockSelector';
 import { Block, Cell, GameState, GRID_SIZE } from '@/types/game';
@@ -22,19 +22,40 @@ export const Game = () => {
         grid: createEmptyGrid()
     });
 
+    const [toast, setToast] = useState<{
+        message: string;
+        visible: boolean;
+    }>({
+        message: '',
+        visible: false
+    });
+
+    // Auto-hide toast after 2 seconds
+    useEffect(() => {
+        if (toast.visible) {
+            const timer = setTimeout(() => {
+                setToast(prev => ({ ...prev, visible: false }));
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast.visible]);
+
+    const showToast = (message: string) => {
+        setToast({ message, visible: true });
+    };
+
     const handleBlockSelect = useCallback((block: Block) => {
         setGameState(prev => ({
             ...prev,
             selectedBlock: {
                 ...block,
-                id: uuidv4() // Generate a new unique ID when selecting from palette
+                id: uuidv4()
             }
         }));
     }, []);
 
     const handleCellClick = useCallback((rowIndex: number, colIndex: number) => {
         setGameState(prev => {
-            // Create a deep copy of the grid
             const newGrid = prev.grid.map(row => row.map(cell => ({
                 ...cell,
                 block: cell.block ? { ...cell.block } : null
@@ -44,7 +65,6 @@ export const Game = () => {
             // If we have a selected block and the cell is empty, place the block
             if (prev.selectedBlock && !targetCell.block) {
                 targetCell.block = { ...prev.selectedBlock };
-                // Find and remove the original block if it was picked from the grid
                 if (prev.selectedBlock.originalPosition) {
                     const { row, col } = prev.selectedBlock.originalPosition;
                     newGrid[row][col].block = null;
@@ -61,7 +81,7 @@ export const Game = () => {
             if (targetCell.block && !prev.selectedBlock) {
                 const pickedBlock = {
                     ...targetCell.block,
-                    id: targetCell.block.id, // Keep the same ID when picking up
+                    id: targetCell.block.id,
                     originalPosition: { row: rowIndex, col: colIndex }
                 };
                 return {
@@ -71,15 +91,10 @@ export const Game = () => {
                 };
             }
 
-            // If we have both a selected block and a block in the cell, swap them
+            // If trying to place on an occupied cell, show toast and return current state
             if (prev.selectedBlock && targetCell.block) {
-                const cellBlock = { ...targetCell.block };
-                targetCell.block = { ...prev.selectedBlock };
-                return {
-                    ...prev,
-                    selectedBlock: cellBlock,
-                    grid: newGrid
-                };
+                showToast("Can't place block on an occupied cell!");
+                return prev;
             }
 
             return prev;
@@ -140,6 +155,13 @@ export const Game = () => {
                     Save as Image
                 </button>
             </div>
+
+            {/* Toast notification */}
+            {toast.visible && (
+                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg transition-opacity duration-300">
+                    {toast.message}
+                </div>
+            )}
         </div>
     );
 }; 
