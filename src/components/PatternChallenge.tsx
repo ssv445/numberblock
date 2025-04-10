@@ -41,7 +41,7 @@ export const PatternChallenge = ({ grid, onCellClick, selectedBlock }: PatternCh
 
     return (
         <div className="flex flex-col items-center gap-2">
-            <h3 className="text-lg text-center text-gray-900 mb-2">Build this pattern</h3>
+            <h3 className="text-lg text-center text-gray-900 mb-2">Inspiration</h3>
             {currentPattern && (
                 <div
                     className="relative w-32 h-32 cursor-pointer"

@@ -300,7 +300,7 @@ export const Game = () => {
 
 
             <div className="flex justify-between w-full mt-4 px-4">
-                <div className="w-1/3">
+                <div className="w-5/12">
                     <BlockSelector
                         selectedBlock={gameState.selectedBlock}
                         onBlockSelect={handleBlockSelect}
@@ -308,7 +308,7 @@ export const Game = () => {
                     />
                 </div>
 
-                <div className="w-1/3 flex justify-end">
+                <div className="w-5/12 flex justify-end">
                     <PatternChallenge
                         grid={gameState.grid}
                         onCellClick={handleCellClick}

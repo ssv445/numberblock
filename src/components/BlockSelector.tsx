@@ -11,7 +11,7 @@ type BlockSelectorProps = {
 
 export const BlockSelector = ({ selectedBlock, onBlockSelect, layout = 'horizontal' }: BlockSelectorProps) => {
     return (
-        <div className={`grid ${layout === 'vertical' ? 'grid-cols-2 grid-rows-5 gap-2' : 'grid-cols-10 gap-1'} p-2 bg-gray-100 rounded-lg`}>
+        <div className={`grid ${layout === 'vertical' ? 'grid-cols-3 grid-rows-4 gap-1' : 'grid-cols-10 gap-1'} p-2 bg-gray-100 rounded-lg`}>
             {COLORS.map((color) => {
                 const block: Block = {
                     id: uuidv4(),
