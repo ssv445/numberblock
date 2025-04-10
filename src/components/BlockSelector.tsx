@@ -11,7 +11,7 @@ type BlockSelectorProps = {
 
 export const BlockSelector = ({ selectedBlock, onBlockSelect, layout = 'horizontal' }: BlockSelectorProps) => {
     return (
-        <div className={`grid ${layout === 'vertical' ? 'grid-cols-3 grid-rows-4 gap-1' : 'grid-cols-10 gap-1'} p-2 bg-gray-100 rounded-lg`}>
+        <div className={`grid ${layout === 'vertical' ? 'grid-cols-10 grid-rows-3 gap-1' : 'grid-cols-10 gap-1'} p-2 bg-gray-100 rounded-lg`}>
             {COLORS.map((color) => {
                 const block: Block = {
                     id: uuidv4(),
@@ -24,7 +24,7 @@ export const BlockSelector = ({ selectedBlock, onBlockSelect, layout = 'horizont
                         key={block.id}
                         onClick={() => onBlockSelect(block)}
                         className={`
-                            relative w-10 h-10 
+                            relative w-8 h-8 
                             rounded-sm cursor-pointer 
                             transition-all duration-200 
                             transform hover:scale-105
@@ -34,8 +34,8 @@ export const BlockSelector = ({ selectedBlock, onBlockSelect, layout = 'horizont
                         style={{
                             backgroundColor: color,
                             border: isSelected
-                                ? '2px solid transparent'
-                                : '2px solid rgba(0,0,0,0.2)'
+                                ? '1px solid transparent'
+                                : '1px solid rgba(0,0,0,0.2)'
                         }}
                     >
                         {isSelected && (

@@ -45,4 +45,7 @@ export const getLightColor = (hexColor: string, lightness: number): string => {
     return Color(hexColor).lighten(lightness / 100).hex();
 };
 
-export const COLORS = NORMAL_COLORS.map(color => [color, getLightColor(color, 40), getLightColor(color, 70)]).flat();
+
+export const LIGHT_COLORS = NORMAL_COLORS.map(color => getLightColor(color, 25));
+export const LIGHTER_COLORS = NORMAL_COLORS.map(color => getLightColor(color, 50));
+export const COLORS = [...NORMAL_COLORS, ...LIGHT_COLORS, ...LIGHTER_COLORS];

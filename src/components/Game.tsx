@@ -319,24 +319,17 @@ export const Game = () => {
                 counterColor={counterColor}
             />
 
+            <BlockSelector
+                selectedBlock={gameState.selectedBlock}
+                onBlockSelect={handleBlockSelect}
+                layout="vertical"
+            />
 
-            <div className="flex justify-between w-full mt-4 px-4">
-                <div className="w-5/12">
-                    <BlockSelector
-                        selectedBlock={gameState.selectedBlock}
-                        onBlockSelect={handleBlockSelect}
-                        layout="vertical"
-                    />
-                </div>
-
-                <div className="w-5/12 flex justify-end">
-                    <PatternChallenge
-                        grid={gameState.grid}
-                        onCellClick={handleCellClick}
-                        selectedBlock={gameState.selectedBlock}
-                    />
-                </div>
-            </div>
+            <PatternChallenge
+                grid={gameState.grid}
+                onCellClick={handleCellClick}
+                selectedBlock={gameState.selectedBlock}
+            />
 
             <div className="w-full flex justify-center mt-4">
                 <button
