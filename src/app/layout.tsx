@@ -6,6 +6,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
     manifest: '/manifest.json',
+    metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://numberblock.vercel.app'),
     title: 'NumberBlock - Kids Number Learning Game',
     description: 'Learn numbers and patterns with fun, interactive blocks. A simple PWA game for kids.',
     keywords: ['numberblocks', 'kids game', 'learning numbers', 'educational game', 'pwa game', 'blocks game'],
@@ -57,17 +58,15 @@ export default function RootLayout({
     return (
         <html lang="en">
             <head>
-                {/* Basic PWA Meta Tags */}
                 <meta name="application-name" content="NumberBlock" />
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
                 <meta name="apple-mobile-web-app-title" content="NumberBlock" />
                 <meta name="format-detection" content="telephone=no" />
                 <meta name="mobile-web-app-capable" content="yes" />
-                <meta name="msapplication-config" content="/icons/browserconfig.xml" /> {/* Optional: Create this file */}
+                <meta name="msapplication-config" content="/icons/browserconfig.xml" />
                 <meta name="msapplication-TileColor" content="#000000" />
                 <meta name="msapplication-tap-highlight" content="no" />
-                {/* Add to homescreen for Safari on iOS */}
                 <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
                 <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png" />
             </head>
