@@ -162,15 +162,39 @@ export const Game = () => {
     const handleSave = useCallback(async () => {
         try {
             setIsSaving(true);
-            const rowsToRender = Math.max(gameState.maxRow + 1, MIN_GRID_SIZE);
-            const colsToRender = Math.max(gameState.maxCol + 1, MIN_GRID_SIZE);
+
+            // Find the minimum and maximum row/col that contain blocks
+            let minRow = gameState.grid.length;
+            let maxRow = -1;
+            let minCol = gameState.grid[0].length;
+            let maxCol = -1;
+
+            for (let rowIndex = 0; rowIndex <= gameState.maxRow; rowIndex++) {
+                for (let colIndex = 0; colIndex <= gameState.maxCol; colIndex++) {
+                    if (gameState.grid[rowIndex]?.[colIndex]?.block) {
+                        minRow = Math.min(minRow, rowIndex);
+                        maxRow = Math.max(maxRow, rowIndex);
+                        minCol = Math.min(minCol, colIndex);
+                        maxCol = Math.max(maxCol, colIndex);
+                    }
+                }
+            }
+
+            // Add 1 cell padding around the blocks
+            minRow = Math.max(0, minRow - 1);
+            maxRow = Math.min(gameState.grid.length - 1, maxRow + 1);
+            minCol = Math.max(0, minCol - 1);
+            maxCol = Math.min(gameState.grid[0].length - 1, maxCol + 1);
+
+            const rowCount = maxRow - minRow + 1;
+            const colCount = maxCol - minCol + 1;
 
             const canvas = document.createElement('canvas');
             const cellSize = 40;
             const padding = 20;
-            const headerHeight = 40; // Height for the block count text
-            canvas.width = colsToRender * cellSize + 2 * padding;
-            canvas.height = rowsToRender * cellSize + 2 * padding + headerHeight;
+            const headerHeight = 60;
+            canvas.width = colCount * cellSize + 2 * padding;
+            canvas.height = rowCount * cellSize + 2 * padding + headerHeight;
             const ctx = canvas.getContext('2d');
             if (!ctx) {
                 showToast('Failed to create canvas context');
@@ -185,25 +209,26 @@ export const Game = () => {
             ctx.font = 'bold 36px "Comic Sans MS", cursive';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = 'black';
-
-            const text = `${gameState.placedBlocks}`;
+            ctx.fillStyle = counterColor;
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.lineWidth = 2;
+            const text = `${gameState.placedBlocks} Blocks`;
             const textX = canvas.width / 2;
             const textY = headerHeight / 2;
             ctx.fillText(text, textX, textY);
             ctx.strokeText(text, textX, textY);
 
             // Draw grid
-            for (let rowIndex = 0; rowIndex < rowsToRender; rowIndex++) {
-                for (let colIndex = 0; colIndex < colsToRender; colIndex++) {
-                    const cell = gameState.grid[rowIndex]?.[colIndex];
-                    const x = colIndex * cellSize + padding;
-                    const y = rowIndex * cellSize + padding + headerHeight; // Add headerHeight offset
+            for (let row = 0; row < rowCount; row++) {
+                for (let col = 0; col < colCount; col++) {
+                    const cell = gameState.grid[row + minRow]?.[col + minCol];
+                    const x = col * cellSize + padding;
+                    const y = row * cellSize + padding + headerHeight;
 
                     ctx.fillStyle = cell?.block?.color || '#FFFFFF';
                     ctx.fillRect(x, y, cellSize, cellSize);
 
-                    ctx.strokeStyle = cell?.block ? 'rgba(0,0,0,0.2)' : '#FFFFFF';
+                    ctx.strokeStyle = cell?.block ? 'rgba(0,0,0,0.2)' : '#e5e7eb';
                     ctx.lineWidth = cell?.block ? 2 : 1;
                     ctx.strokeRect(x, y, cellSize, cellSize);
                 }
