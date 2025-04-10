@@ -93,20 +93,18 @@ export const Game = () => {
 
                 return {
                     ...prev,
-                    selectedBlock: null, // Also clear selected block from palette if any was held
                     grid: newGrid,
-                    placedBlocks: prev.placedBlocks - 1, // Decrement counter
+                    placedBlocks: prev.placedBlocks - 1,
                     maxRow: currentMaxRow,
                     maxCol: currentMaxCol
                 };
             });
-            setCounterColor(getRandomColor()); // Call this *after* initiating the game state update
-
         } else if (gameState.selectedBlock) {
-            // Action: Place block (only if a block is selected)
-            const blockToPlace = gameState.selectedBlock; // Capture the non-null block here
+            // Action: Place block
+            const blockToPlace = gameState.selectedBlock;
+            const targetCellId = cell?.id || uuidv4();
+
             setGameState(prev => {
-                // No need to re-read grid/cell, already know it's empty and selectedBlock exists
                 const grid = prev.grid;
                 const newGrid = [...grid.map(row => [...row])];
 
@@ -150,14 +148,12 @@ export const Game = () => {
 
                 return {
                     ...prev,
-                    selectedBlock: null, // Clear selected block
                     grid: newGrid,
-                    placedBlocks: prev.placedBlocks + 1, // Increment counter
+                    placedBlocks: prev.placedBlocks + 1,
                     maxRow: finalMaxRow,
                     maxCol: finalMaxCol
                 };
             });
-            setCounterColor(getRandomColor()); // Call this *after* initiating the game state update
         }
         // Else: Clicked empty cell with no block selected - do nothing
 
