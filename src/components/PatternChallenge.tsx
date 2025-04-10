@@ -20,7 +20,12 @@ export const PatternChallenge = ({ grid, onCellClick, selectedBlock }: PatternCh
     useEffect(() => {
         fetch('/nbimg/numbers.json')
             .then(res => res.json())
-            .then(data => setPatterns(data))
+            .then(data => {
+                setPatterns(data);
+                // Set random pattern index after loading patterns
+                const randomIndex = Math.floor(Math.random() * data.length);
+                setCurrentPatternIndex(randomIndex);
+            })
             .catch(err => console.error('Error loading patterns:', err));
     }, []);
 
@@ -57,9 +62,6 @@ export const PatternChallenge = ({ grid, onCellClick, selectedBlock }: PatternCh
                         className={`w-full h-full object-contain transition-transform duration-200 ${isViewingPattern ? 'fixed inset-4 w-auto h-auto z-50 bg-white p-4 rounded-lg shadow-xl' : ''
                             }`}
                     />
-                    <div className="absolute top-0 left-0 bg-gray-800 text-white px-2 py-1 text-sm rounded-br">
-                        {currentPattern.number}
-                    </div>
                 </div>
             )}
 
