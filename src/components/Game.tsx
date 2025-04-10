@@ -38,6 +38,8 @@ export const Game = () => {
 
     const [isSaving, setIsSaving] = useState(false);
 
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+
     useEffect(() => {
         if (toast.visible) {
             const timer = setTimeout(() => {
@@ -211,6 +213,10 @@ export const Game = () => {
     }, [gameState.grid, gameState.maxRow, gameState.maxCol, gameState.placedBlocks, showToast]);
 
     const handleReset = useCallback(() => {
+        setShowResetConfirm(true);
+    }, []);
+
+    const confirmReset = useCallback(() => {
         setGameState(prev => ({
             ...prev,
             selectedBlock: null,
@@ -220,6 +226,7 @@ export const Game = () => {
             maxCol: -1
         }));
         setCounterColor(COLORS[0]);
+        setShowResetConfirm(false);
     }, []);
 
     return (
@@ -346,6 +353,31 @@ export const Game = () => {
             {toast.visible && (
                 <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg transition-opacity duration-300 z-50">
                     {toast.message}
+                </div>
+            )}
+
+            {showResetConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Reset Grid?</h3>
+                        <p className="text-gray-600 mb-6">
+                            This will remove all blocks and reset the counter. This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowResetConfirm(false)}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmReset}
+                                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded transition-colors"
+                            >
+                                Reset
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
