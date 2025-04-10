@@ -172,27 +172,42 @@ export const Game = () => {
             const canvas = document.createElement('canvas');
             const cellSize = 40;
             const padding = 20;
+            const headerHeight = 40; // Height for the block count text
             canvas.width = colsToRender * cellSize + 2 * padding;
-            canvas.height = rowsToRender * cellSize + 2 * padding;
+            canvas.height = rowsToRender * cellSize + 2 * padding + headerHeight;
             const ctx = canvas.getContext('2d');
             if (!ctx) {
                 showToast('Failed to create canvas context');
                 return;
             }
 
-            ctx.fillStyle = '#f3f4f6'; // Background color for padding
+            // Set background
+            ctx.fillStyle = '#f3f4f6';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Draw block count text
+            ctx.font = 'bold 36px "Comic Sans MS", cursive';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'black';
+
+            const text = `${gameState.placedBlocks}`;
+            const textX = canvas.width / 2;
+            const textY = headerHeight / 2;
+            ctx.fillText(text, textX, textY);
+            ctx.strokeText(text, textX, textY);
+
+            // Draw grid
             for (let rowIndex = 0; rowIndex < rowsToRender; rowIndex++) {
                 for (let colIndex = 0; colIndex < colsToRender; colIndex++) {
                     const cell = gameState.grid[rowIndex]?.[colIndex];
                     const x = colIndex * cellSize + padding;
-                    const y = rowIndex * cellSize + padding;
+                    const y = rowIndex * cellSize + padding + headerHeight; // Add headerHeight offset
 
-                    ctx.fillStyle = cell?.block?.color || '#FFFFFF'; // White for empty cells
+                    ctx.fillStyle = cell?.block?.color || '#FFFFFF';
                     ctx.fillRect(x, y, cellSize, cellSize);
 
-                    ctx.strokeStyle = cell?.block ? 'rgba(0,0,0,0.2)' : '#e5e7eb'; // Grid lines
+                    ctx.strokeStyle = cell?.block ? 'rgba(0,0,0,0.2)' : '#FFFFFF';
                     ctx.lineWidth = cell?.block ? 2 : 1;
                     ctx.strokeRect(x, y, cellSize, cellSize);
                 }
@@ -213,7 +228,7 @@ export const Game = () => {
         } finally {
             setIsSaving(false);
         }
-    }, [gameState.grid, gameState.maxRow, gameState.maxCol, gameState.placedBlocks, showToast]);
+    }, [gameState.grid, gameState.maxRow, gameState.maxCol, gameState.placedBlocks, counterColor, showToast]);
 
     const handleReset = useCallback(() => {
         setShowResetConfirm(true);
