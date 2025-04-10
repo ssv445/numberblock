@@ -212,7 +212,7 @@ export const Game = () => {
             ctx.fillStyle = counterColor;
             ctx.strokeStyle = 'rgba(0,0,0,0.2)';
             ctx.lineWidth = 2;
-            const text = `${gameState.placedBlocks} Blocks`;
+            const text = `${gameState.placedBlocks}`;
             const textX = canvas.width / 2;
             const textY = headerHeight / 2;
             ctx.fillText(text, textX, textY);
