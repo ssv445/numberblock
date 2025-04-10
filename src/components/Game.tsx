@@ -36,6 +36,8 @@ export const Game = () => {
 
     const [showInstructions, setShowInstructions] = useState(false);
 
+    const [isSaving, setIsSaving] = useState(false);
+
     useEffect(() => {
         if (toast.visible) {
             const timer = setTimeout(() => {
@@ -156,41 +158,57 @@ export const Game = () => {
 
     }, [gameState.grid, gameState.selectedBlock]); // Add dependencies used outside setGameState
 
-    const handleSave = useCallback(() => {
-        const rowsToRender = Math.max(gameState.maxRow + 1, MIN_GRID_SIZE);
-        const colsToRender = Math.max(gameState.maxCol + 1, MIN_GRID_SIZE);
+    const handleSave = useCallback(async () => {
+        try {
+            setIsSaving(true);
+            const rowsToRender = Math.max(gameState.maxRow + 1, MIN_GRID_SIZE);
+            const colsToRender = Math.max(gameState.maxCol + 1, MIN_GRID_SIZE);
 
-        const canvas = document.createElement('canvas');
-        const cellSize = 40;
-        const padding = 20;
-        canvas.width = colsToRender * cellSize + 2 * padding;
-        canvas.height = rowsToRender * cellSize + 2 * padding;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        ctx.fillStyle = '#f3f4f6'; // Background color for padding
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        for (let rowIndex = 0; rowIndex < rowsToRender; rowIndex++) {
-            for (let colIndex = 0; colIndex < colsToRender; colIndex++) {
-                const cell = gameState.grid[rowIndex]?.[colIndex];
-                const x = colIndex * cellSize + padding;
-                const y = rowIndex * cellSize + padding;
-
-                ctx.fillStyle = cell?.block?.color || '#FFFFFF'; // White for empty cells
-                ctx.fillRect(x, y, cellSize, cellSize);
-
-                ctx.strokeStyle = cell?.block ? 'rgba(0,0,0,0.2)' : '#e5e7eb'; // Grid lines
-                ctx.lineWidth = cell?.block ? 2 : 1;
-                ctx.strokeRect(x, y, cellSize, cellSize);
+            const canvas = document.createElement('canvas');
+            const cellSize = 40;
+            const padding = 20;
+            canvas.width = colsToRender * cellSize + 2 * padding;
+            canvas.height = rowsToRender * cellSize + 2 * padding;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                showToast('Failed to create canvas context');
+                return;
             }
-        }
 
-        const link = document.createElement('a');
-        link.download = 'number-blocks.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    }, [gameState.grid, gameState.maxRow, gameState.maxCol]);
+            ctx.fillStyle = '#f3f4f6'; // Background color for padding
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let rowIndex = 0; rowIndex < rowsToRender; rowIndex++) {
+                for (let colIndex = 0; colIndex < colsToRender; colIndex++) {
+                    const cell = gameState.grid[rowIndex]?.[colIndex];
+                    const x = colIndex * cellSize + padding;
+                    const y = rowIndex * cellSize + padding;
+
+                    ctx.fillStyle = cell?.block?.color || '#FFFFFF'; // White for empty cells
+                    ctx.fillRect(x, y, cellSize, cellSize);
+
+                    ctx.strokeStyle = cell?.block ? 'rgba(0,0,0,0.2)' : '#e5e7eb'; // Grid lines
+                    ctx.lineWidth = cell?.block ? 2 : 1;
+                    ctx.strokeRect(x, y, cellSize, cellSize);
+                }
+            }
+
+            // Generate random number for filename
+            const randomNum = Math.floor(Math.random() * 10000);
+            const filename = `number-blocks-${gameState.placedBlocks}-${randomNum}.png`;
+
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('Image saved successfully!');
+        } catch (error) {
+            showToast('Failed to save image');
+            console.error('Error saving image:', error);
+        } finally {
+            setIsSaving(false);
+        }
+    }, [gameState.grid, gameState.maxRow, gameState.maxCol, gameState.placedBlocks, showToast]);
 
     const handleReset = useCallback(() => {
         setGameState(prev => ({
@@ -231,15 +249,22 @@ export const Game = () => {
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={gameState.placedBlocks === 0}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        disabled={gameState.placedBlocks === 0 || isSaving}
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors relative"
                         title="Save as Image"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="7 10 12 15 17 10" />
-                            <line x1="12" y1="15" x2="12" y2="3" />
-                        </svg>
+                        {isSaving ? (
+                            <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                                <path className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                        )}
                     </button>
                 </div>
             </div>
