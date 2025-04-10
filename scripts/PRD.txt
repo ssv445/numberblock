@@ -1,0 +1,173 @@
+<context>
+# Overview  
+Product: NumberBlocks is a simple, **mobile-first**, interactive web-based game allowing users (primarily children aged 4-10) to place colored blocks on an expandable grid **using touch interfaces on phones and tablets**. It includes a free-form creation mode and a pattern challenge mode. It is designed to be installable on the user's home screen.
+Problem Solved: It addresses the challenge of making abstract mathematical concepts tangible and engaging for young learners, especially on **mobile devices (phones and tablets)**, by providing a creative, visual platform inspired by the 'Numberblocks' show. It also offers structured challenges optimized for touch interaction and easy access via home screen installation.
+Target Audience: Primarily children (4-10 yrs) using **mobile phones or tablets**, secondarily parents/educators, and anyone wanting a simple digital block-building canvas or pattern replication challenge on the go.
+Value: It makes learning/exploration visual and fun through direct manipulation and creative freedom (free-form mode) or guided challenges (pattern mode), optimized for touch on phones and tablets. It fosters pattern recognition, basic number sense, and spatial skills. It allows users to save their free-form creations and easily access the game from their home screen.
+
+# Core Features
+
+1.  Interactive Grid System
+    - What: A dynamic, expandable grid for placing blocks, designed for touch interaction on phones and tablets.
+    - Why: Provides the core canvas for visual creation and pattern replication on mobile and tablet screens.
+    - How: Starts as a 10x10 grid, automatically adds rows/columns when blocks are placed near edges, maintains clear cell boundaries, and becomes scrollable (via touch panning) when content exceeds the viewport. Grid background and border colors are distinct from block colors.
+
+2.  Block Management System
+    - What: Palette selection, block placement, and removal optimized for touch on phones and tablets.
+    - Why: Enables users to create and modify patterns intuitively on mobile devices.
+    - How: A persistent palette shows 10 colors (located bottom-left, with large tap targets). Users tap a color to select it, tap an empty grid cell to place, and tap an existing block to remove. A counter tracks the total blocks placed. Block border colors are distinct from grid lines.
+
+3.  Creation Export (Free-form Mode)
+    - What: Ability to save the created pattern as a PNG image via a simple tap on phones and tablets.
+    - Why: Allows users to easily preserve, share, or print their free-form work from mobile devices.
+    - How: A single button (large tap target) triggers the export, capturing the current state of the grid (all blocks) into a downloadable PNG file named 'number-blocks-{blockCount}-{randomNumber}.png' (where {blockCount} is the current block count and {randomNumber} is a random number or timestamp), with appropriate padding. (Note: Export might be less relevant or disabled in Pattern Challenge Mode).
+
+4.  Pattern Challenge Mode
+    - What: Users replicate pre-defined patterns displayed on screen using touch controls on phones and tablets.
+    - Why: Provides structured challenges, enhances spatial reasoning and matching skills on mobile devices.
+    - How:
+        - Loads pattern data (images + metadata JSON).
+        - Displays one pattern image thumbnail (bottom-right).
+        - User attempts to build the matching pattern on the grid via taps.
+        - Navigation buttons (Next, Previous, Random - large tap targets) below the thumbnail allow switching patterns.
+        - Hold-to-view (Tap-and-hold): Touching-and-holding the pattern thumbnail displays it in a fullscreen overlay; releasing touch hides the overlay.
+
+5.  Grid Reset
+    - What: A button (large tap target) to clear the grid, easily accessible on phones and tablets.
+    - Why: Allows users to easily start over with a simple tap.
+    - How: A dedicated button, when tapped, removes all placed blocks from the grid, resetting the block counter.
+
+# User Experience
+
+**Design Principle: Mobile-First & Touch-Centric (Phones & Tablets)**
+- The primary experience is designed for **mobile and tablet browsers** (iOS Safari, Android Chrome).
+- All interactions must be intuitive and comfortable using touch (tapping, holding, panning/scrolling).
+- Layout must adapt fluidly to various **phone and tablet** screen sizes and orientations (portrait prioritized).
+- The application should be **installable** to the home screen for easy access.
+
+User Personas:
+- Primary: Young Learner (4-10 yrs) using a **tablet or parent's phone** - Needs engaging touch-based ways to explore numbers/patterns; enjoys matching challenges on mobile devices; appreciates having favorite games easily accessible from the home screen.
+- Secondary: Parent/Educator looking for quick, accessible mobile/tablet learning tools that can be easily launched.
+
+Key User Flows: (Interactions assumed to be touch-based on phones/tablets)
+- Installation (First time/Prompted): User visits site -> Browser prompts "Add to Home Screen" (or user manually selects option) -> App icon appears on home screen.
+- Free-form Creation: Launch app (from home screen or browser) -> Tap color (bottom-left palette) -> Tap cells to place blocks -> Tap existing blocks to remove -> Pan grid if needed -> Tap Export button (PNG with specified filename).
+- Pattern Challenge: Launch app -> Observe pattern thumbnail (bottom-right) -> Tap-and-hold thumbnail to view fullscreen -> Release -> Tap color (bottom-left palette) -> Tap cells to place blocks -> Tap Next/Previous/Random buttons -> Tap Reset button to clear grid.
+
+UI/UX Considerations:
+- **Touch Targets:** All interactive elements must have sufficiently large tap targets.
+- **Layout:** Palette fixed bottom-left; Pattern controls fixed bottom-right. Ensure usability across various phone and tablet screen sizes.
+- **Visual Feedback:** Clear, immediate visual feedback for taps. Highlight active pattern thumbnail.
+- **Hold-to-view Interaction:** Reliable tap-and-hold detection for pattern zoom.
+- **Scrolling/Panning:** Intuitive touch-based panning for navigating larger grids.
+- **Performance:** Critical on mobile and tablet devices. Smooth interactions, fast load times.
+- **Color Distinction:** Grid lines/background distinct from block colors/borders.
+- **Installability:** Provide necessary metadata (manifest) for A2HS prompts. Define icons and theme colors.
+</context>
+<PRD>
+# Technical Architecture  
+System Components:
+- Frontend Application: Next.js (App Router) with TypeScript, optimized for mobile and tablet performance.
+- UI Components: Grid (touch handling), Block Palette (touch targets), Counter, Export Button (touch target), Pattern Display (touch target, tap-and-hold logic), Pattern Navigation (touch targets), Reset Button (touch target).
+- State Management: React Hooks, chosen for efficiency.
+- Pattern Loader: Efficiently fetch/process pattern data.
+- Export Handler: Canvas API for PNG generation, performant on target devices.
+- **Web App Manifest (manifest.json):** Defines app name, icons, start URL, display mode, theme color for PWA installability.
+- **Service Worker Script:** Basic script required for installability prompt (can be expanded later for offline capabilities).
+
+Data Models:
+- Grid State: Optimized for frequent updates from touch input.
+- Block Data (Implicit): Color, position.
+- Pattern Metadata (from JSON): As previously defined.
+
+APIs and Integrations:
+- Browser APIs: Canvas, Fetch, Touch Events, Service Worker API, potentially `Date.now()` or `Math.random()`.
+
+Infrastructure Requirements:
+- Hosting: Vercel (CDN critical for fast asset loading).
+- **HTTPS:** Required for Service Worker registration and PWA features.
+- **Mobile & Tablet Browser Compatibility:** Primary focus on latest iOS Safari and Android Chrome **on both phones and tablets**, supporting PWA features. Desktop browsers secondary.
+
+# Development Roadmap
+
+**Mobile-First Prioritization (Phones & Tablets):** Development should continuously test and validate on target **mobile and tablet devices/emulators**. Performance and touch usability are paramount from the start.
+
+MVP Requirements (Phase 1 - Core Usable Mobile/Tablet Product - Free-form Focus):
+- Functional Interactive Grid: Renders, expands, touch panning works smoothly. Distinct colors.
+- Functional Block Management: Touch-friendly palette (bottom-left), tap-to-place/remove works reliably.
+- Accurate Block Counter.
+- Functional PNG Export (tap-activated, specified filename).
+- Fluid Responsive Layout for common **phone and tablet** screens.
+
+Future Enhancements (Post-MVP):
+
+Phase 2 - Pattern Challenge Mode (Mobile/Tablet Optimized):
+- Implement Pattern Loader.
+- Implement Pattern Display (touch-friendly thumbnail, reliable tap-and-hold overlay).
+- Implement Pattern Navigation (large touch buttons).
+- Implement Grid Reset Button (large touch target).
+- Integrate Mode Switching.
+- Ensure layout works well on **phones and tablets** with all elements visible.
+
+Phase 3 - Further Enhancements:
+- **Implement PWA Features:** Add Web App Manifest (for Add to Home Screen capability, theme color, icons) and a basic Service Worker (initially for installability, potentially later for offline caching).
+- Saving/Loading patterns (Local Storage).
+- Sharing features.
+- Pattern completion feedback.
+- Performance optimizations (virtualization if needed).
+- UI feedback/animations (optimized for mobile/tablet).
+- Sound effects (optional, consider context).
+
+# Logical Dependency Chain
+
+(Order remains similar, but emphasis on mobile and tablet testing at each stage)
+
+1.  Foundation (Core MVP): Setup, state mgmt, static Grid (test touch interaction early).
+2.  Visible Core Interaction (Core MVP): Touch-friendly Palette, tap-to-place/remove logic.
+3.  Atomic Feature Build-out (Core MVP): Grid expansion, Counter, Export (tap trigger, filename), Responsive mobile/tablet layout.
+4.  Pattern Challenge Implementation (Phase 2): Load assets, touch-friendly Pattern Display/Nav/Reset components, layout adjustments for mobile/tablet.
+5.  PWA Implementation (Phase 3): Add manifest.json, register basic service worker, configure icons/theme.
+
+# Risks and Mitigations
+
+Technical Challenges:
+- Risk: Performance bottlenecks on less powerful mobile/tablet devices.
+- Mitigation: Constant mobile/tablet performance testing. Optimize rendering, state updates. Profile frequently. Choose efficient libraries/patterns.
+- Risk: Handling touch events accurately across different devices/screen sizes.
+- Mitigation: Use established libraries or careful implementation. Test edge cases (multi-touch, varying screen densities).
+- Risk: Cross-browser inconsistencies on mobile/tablet browsers (including PWA support).
+- Mitigation: Prioritize target browsers (Safari/Chrome on iOS/Android). Test frequently on real devices or accurate emulators. Use feature detection/polyfills.
+- Risk: Export reliability/performance on mobile/tablet.
+- Mitigation: Test export on target devices. Ensure Canvas operations are efficient.
+- **Risk: Ensuring consistent PWA behavior and Add to Home Screen (A2HS) prompting across different browsers/OS versions.**
+- **Mitigation: Follow PWA best practices (manifest properties, service worker scope). Test A2HS flow thoroughly on target platforms. Provide simple fallback instructions if native prompt fails.**
+
+Figuring out the MVP/Phases:
+- Risk: Scope creep affecting mobile/tablet optimization focus.
+- Mitigation: Strictly adhere to MVP/Phase scope. Prioritize features essential for a good mobile/tablet experience first.
+- Risk: UI clutter on various phone and tablet screen sizes.
+- Mitigation: Mobile-first design, responsive techniques. Ensure primary grid interaction space is maximized across devices.
+
+Resource Constraints:
+- Risk: Time needed for mobile/tablet-specific testing and PWA implementation/testing.
+- Mitigation: Allocate specific time for testing throughout development. Focus on the core experience first. Implement basic PWA features initially.
+
+# Appendix
+
+Technical Specifications:
+- Framework: Next.js (App Router)
+- Language: TypeScript
+- Styling: Tailwind CSS (with focus on responsive/mobile-first classes)
+- State Management: React Hooks
+- Hosting: Vercel
+- Pattern Data: Local JSON/images.
+- **PWA:** Web App Manifest, Service Worker
+
+**Primary Target Platforms:**
+- **Mobile & Tablet Browsers:** Latest iOS Safari, Latest Android Chrome (supporting PWA installability).
+- Desktop Browsers: Latest Chrome, Firefox, Safari, Edge (secondary validation).
+
+Demo/Code Reference:
+- Live Demo: https://numberblock.vercel.app/
+- Code: https://github.com/ssv445/numberblock
+</PRD>
