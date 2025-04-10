@@ -6,11 +6,12 @@ import { v4 as uuidv4 } from 'uuid';
 type BlockSelectorProps = {
     selectedBlock: Block | null;
     onBlockSelect: (block: Block) => void;
+    layout: 'horizontal' | 'vertical';
 };
 
-export const BlockSelector = ({ selectedBlock, onBlockSelect }: BlockSelectorProps) => {
+export const BlockSelector = ({ selectedBlock, onBlockSelect, layout = 'horizontal' }: BlockSelectorProps) => {
     return (
-        <div className="flex flex-wrap gap-1 p-2 bg-gray-100 rounded-lg max-w-[600px]">
+        <div className={`grid ${layout === 'vertical' ? 'grid-cols-2 grid-rows-5 gap-2' : 'grid-cols-10 gap-1'} p-2 bg-gray-100 rounded-lg`}>
             {COLORS.map((color) => {
                 const block: Block = {
                     id: uuidv4(),

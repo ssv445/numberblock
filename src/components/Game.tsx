@@ -5,6 +5,7 @@ import { Grid } from './Grid';
 import { BlockSelector } from './BlockSelector';
 import { Block, Cell, GameState, INITIAL_GRID_SIZE, MIN_GRID_SIZE, COLORS } from '@/types/game';
 import { v4 as uuidv4 } from 'uuid';
+import { PatternChallenge } from './PatternChallenge';
 
 const createEmptyGrid = (size: number): Cell[][] => {
     return Array(size).fill(null).map(() =>
@@ -39,6 +40,8 @@ export const Game = () => {
     const [isSaving, setIsSaving] = useState(false);
 
     const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+    const [isPatternMode, setIsPatternMode] = useState(false);
 
     useEffect(() => {
         if (toast.visible) {
@@ -230,51 +233,45 @@ export const Game = () => {
     }, []);
 
     return (
-        <div className="flex flex-col items-center gap-4 p-4">
-            <div className="relative w-full flex items-center justify-between mb-2">
-                <h1 className="text-2xl font-bold text-gray-800">NumberBlocks Game</h1>
-                <div className="flex items-center gap-4">
-                    <div
-                        className="flex items-center justify-center w-12 h-12 rounded-full text-2xl font-bold text-white transition-colors duration-200"
-                        style={{
-                            backgroundColor: counterColor,
-                            border: '2px solid rgba(0,0,0,0.2)'
-                        }}
-                    >
-                        {gameState.placedBlocks}
-                    </div>
-                    <button
-                        onClick={handleReset}
-                        disabled={gameState.placedBlocks === 0}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors mr-2"
-                        title="Reset Grid"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                            <path d="M3 3v5h5" />
+        <div className="flex flex-col items-center gap-1">
+            <div className="relative w-full flex items-center justify-between px-4 py-2">
+                <button
+                    onClick={handleReset}
+                    disabled={gameState.placedBlocks === 0}
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Reset Grid"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                    </svg>
+                </button>
+
+                <h1 className="text-large text-gray-800 absolute left-1/2 transform -translate-x-1/2">NumberBlocks Game</h1>
+
+
+                <button
+                    onClick={handleSave}
+                    disabled={gameState.placedBlocks === 0 || isSaving}
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors relative"
+                    title="Save as Image"
+                >
+                    {isSaving ? (
+                        <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
+                            <path className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={gameState.placedBlocks === 0 || isSaving}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors relative"
-                        title="Save as Image"
-                    >
-                        {isSaving ? (
-                            <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" />
-                                <path className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                            </svg>
-                        ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="7 10 12 15 17 10" />
-                                <line x1="12" y1="15" x2="12" y2="3" />
-                            </svg>
-                        )}
-                    </button>
-                </div>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                    )}
+                </button>
             </div>
+
+
 
             <Grid
                 grid={gameState.grid}
@@ -282,21 +279,30 @@ export const Game = () => {
                 selectedBlock={gameState.selectedBlock}
                 maxRow={gameState.maxRow}
                 maxCol={gameState.maxCol}
+                placedBlocks={gameState.placedBlocks}
+                counterColor={counterColor}
             />
 
-            <p className="text-gray-500 text-sm italic mb-4">
-                {gameState.selectedBlock
-                    ? "Click any empty cell to place the block"
-                    : "Select a color block from below"
-                }
-            </p>
 
-            <div className="flex flex-col items-center gap-4 w-full max-w-md">
-                <BlockSelector
-                    selectedBlock={gameState.selectedBlock}
-                    onBlockSelect={handleBlockSelect}
-                />
+            <div className="flex justify-between w-full mt-4 px-4">
+                <div className="w-1/3">
+                    <BlockSelector
+                        selectedBlock={gameState.selectedBlock}
+                        onBlockSelect={handleBlockSelect}
+                        layout="vertical"
+                    />
+                </div>
 
+                <div className="w-1/3 flex justify-end">
+                    <PatternChallenge
+                        grid={gameState.grid}
+                        onCellClick={handleCellClick}
+                        selectedBlock={gameState.selectedBlock}
+                    />
+                </div>
+            </div>
+
+            <div className="w-full flex justify-center mt-4">
                 <button
                     onClick={() => setShowInstructions(prev => !prev)}
                     className="text-blue-500 hover:text-blue-600 text-sm font-medium flex items-center gap-1"
@@ -317,14 +323,16 @@ export const Game = () => {
                     </svg>
                     How to Play
                 </button>
+            </div>
 
-                {showInstructions && (
-                    <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 w-full">
+            {showInstructions && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl">
                         <h3 className="font-bold text-gray-800 mb-2">How to Play Number Blocks</h3>
                         <ul className="space-y-2">
                             <li className="flex items-start gap-2">
                                 <span className="font-medium text-blue-500">1.</span>
-                                <span>Select a colored block from the palette below the grid.</span>
+                                <span>Select a colored block from the palette on the left.</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="font-medium text-blue-500">2.</span>
@@ -332,23 +340,28 @@ export const Game = () => {
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="font-medium text-blue-500">3.</span>
-                                <span>The grid will automatically expand when you place blocks near the edges.</span>
+                                <span>Try to recreate the pattern shown on the right.</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="font-medium text-blue-500">4.</span>
-                                <span>To remove a block, simply click on it in the grid. The block counter will decrease.</span>
+                                <span>To remove a block, simply click on it in the grid.</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="font-medium text-blue-500">5.</span>
-                                <span>Use the save button (↓) in the top-right to save your creation as an image.</span>
+                                <span>Use the save button (↓) to save your creation as an image.</span>
                             </li>
                         </ul>
-                        <p className="mt-3 text-xs text-gray-500 italic">
-                            Tip: The counter in the top-right shows how many blocks you've placed and changes color with each placement!
-                        </p>
+                        <div className="flex justify-end mt-4">
+                            <button
+                                onClick={() => setShowInstructions(false)}
+                                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded transition-colors"
+                            >
+                                Got it!
+                            </button>
+                        </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
 
             {toast.visible && (
                 <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg transition-opacity duration-300 z-50">

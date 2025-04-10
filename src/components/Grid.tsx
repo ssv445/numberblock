@@ -10,25 +10,28 @@ type GridProps = {
     // but might be useful for other hints in the future. Keep them for now.
     maxRow: number;
     maxCol: number;
+    placedBlocks: number;
+    counterColor: string;
 };
 
-export const Grid = ({ grid, onCellClick, selectedBlock, maxRow, maxCol }: GridProps) => {
+export const Grid = ({ grid, onCellClick, selectedBlock, maxRow, maxCol, placedBlocks, counterColor }: GridProps) => {
     const gridStyle = {
-        gridTemplateColumns: `repeat(${Math.max(maxCol + 2, MIN_GRID_SIZE)}, minmax(40px, 40px))`,
-        gridTemplateRows: `repeat(${Math.max(maxRow + 2, MIN_GRID_SIZE)}, minmax(40px, 40px))`,
+        gridTemplateColumns: `repeat(${Math.max(maxCol + 2, MIN_GRID_SIZE)}, minmax(36px, 36px))`,
+        gridTemplateRows: `repeat(${Math.max(maxRow + 2, MIN_GRID_SIZE)}, minmax(36px, 36px))`,
         gap: '1px',
     };
 
     return (
-        <div className="relative w-full overflow-hidden bg-gray-100 rounded-xl">
+        <div className="relative w-full overflow-hidden bg-gray-100">
+            <h3 className="text-3xl text-center font-bold text-gray-900 m-1"> {placedBlocks}</h3>
             <div
-                className="overflow-auto max-h-[600px] max-w-full p-4 bg-gray-200"
+                className="overflow-auto max-h-[400px] max-w-full p-2 bg-gray-100"
                 style={{
-                    maxWidth: 'calc(100vw - 2rem)',
+                    maxWidth: 'calc(100vw - 1rem)',
                 }}
             >
                 <div
-                    className="grid bg-gray-300 p-[1px] rounded-lg"
+                    className="grid bg-gray-100 p-[1px]"
                     style={gridStyle}
                 >
                     {Array.from({ length: Math.max(maxRow + 2, MIN_GRID_SIZE) }, (_, rowIndex) => (
@@ -42,7 +45,7 @@ export const Grid = ({ grid, onCellClick, selectedBlock, maxRow, maxCol }: GridP
                                     key={cell?.id || `${rowIndex}-${colIndex}`}
                                     onClick={() => onCellClick(rowIndex, colIndex)}
                                     className={`
-                                        relative aspect-square w-[40px]
+                                        relative aspect-square w-[36px]
                                         flex items-center justify-center 
                                         rounded-sm cursor-pointer 
                                         transition-all duration-200
