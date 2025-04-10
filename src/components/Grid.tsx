@@ -50,7 +50,7 @@ export const Grid = ({ grid, onCellClick, selectedBlock, maxRow, maxCol, placedB
                                         rounded-sm cursor-pointer 
                                         transition-all duration-200
                                         ${hasBlock ? 'shadow-sm' : 'hover:bg-gray-50'}
-                                        ${isSelected ? 'animate-rainbow-glow' : ''}
+                                       }
                                     `}
                                     style={{
                                         backgroundColor: cell?.block?.color ?? 'white',
@@ -62,7 +62,7 @@ export const Grid = ({ grid, onCellClick, selectedBlock, maxRow, maxCol, placedB
                                     }}
                                 >
                                     {isSelected && (
-                                        <div className="absolute inset-[-2px] rounded-sm pointer-events-none animate-rainbow-border" />
+                                        <div className="absolute inset-[-2px] rounded-sm pointer-events-none" />
                                     )}
                                 </div>
                             );
